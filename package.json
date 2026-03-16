@@ -5,9 +5,11 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "vite build && npm run css:build",
     "preview": "vite preview",
-    "css:build": "tailwindcss -i ./src/input.css -o ./dist/output.css --watch"
+    "css:build": "tailwindcss -i ./src/input.css -o ./output.css --watch",
+    "css:build-once": "tailwindcss -i ./src/input.css -o ./output.css",
+    "predeploy": "npm run css:build-once"
   },
   "devDependencies": {
     "autoprefixer": "^10.4.27",
