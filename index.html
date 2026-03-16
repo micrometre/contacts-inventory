@@ -63,27 +63,44 @@
 
     <!-- SIDEBAR -->
     <div id="sidebar" class="bg-surface border-r border-border flex flex-col overflow-hidden">
-      <div class="p-5 px-4 pb-3 border-b border-border">
-        <div class="flex items-center gap-2 mb-3.5">
-          <div class="w-7 h-7 bg-accent-dim border border-accent-dim/25 rounded-lg flex items-center justify-center text-xs">
-            📦
-          </div>
-          <span class="text-xs font-semibold tracking-tight text-text">Inventory</span>
-          <div class="ml-auto">
-            <div class="flex gap-0.5 p-1 bg-surface rounded-lg border border-border">
-              <button class="px-3 py-1.5 rounded-md text-xs font-mono cursor-pointer text-text2 border-none bg-none transition-colors duration-120 hover:text-text active" onclick="switchView('contacts')" id="tab-contacts">contacts</button>
-              <button class="px-3 py-1.5 rounded-md text-xs font-mono cursor-pointer text-text2 border-none bg-none transition-colors duration-120 hover:text-text" onclick="switchView('dashboard')" id="tab-dash">summary</button>
+      <div class="p-4 border-b border-border">
+        <div class="flex items-center justify-between mb-3">
+          <div class="flex items-center gap-2">
+            <div class="w-8 h-8 bg-accent-dim border border-accent/40 rounded-lg flex items-center justify-center text-sm">
+              📦
+            </div>
+            <div>
+              <div class="text-xs font-semibold tracking-tight text-text">Inventory</div>
+              <div class="text-[11px] text-text3">Contacts & items tracker</div>
             </div>
           </div>
+          <div class="flex gap-1 p-0.5 bg-surface2 rounded-lg border border-border">
+            <button class="px-2.5 py-1 rounded-md text-[11px] font-mono cursor-pointer text-text bg-accent-dim border border-accent/40" onclick="switchView('contacts')" id="tab-contacts">
+              contacts
+            </button>
+            <button class="px-2.5 py-1 rounded-md text-[11px] font-mono cursor-pointer text-text2 border border-transparent hover:text-text" onclick="switchView('dashboard')" id="tab-dash">
+              summary
+            </button>
+          </div>
         </div>
-        <div class="relative">
+        <div class="relative mb-2.5">
           <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-text3 text-xs pointer-events-none">⌕</span>
-          <input type="text" placeholder="Search contacts..." id="search-input" oninput="filterContacts()" class="w-full bg-surface2 border border-border rounded-lg py-2 px-2.5 pl-7.5 text-text font-sans text-xs outline-none transition-colors duration-150 focus:border-accent placeholder-text3" />
+          <input
+            type="text"
+            placeholder="Search contacts..."
+            id="search-input"
+            oninput="filterContacts()"
+            class="w-full bg-surface2 border border-border rounded-lg py-2 px-2.5 pl-7.5 text-text font-sans text-xs outline-none transition-colors duration-150 focus:border-accent placeholder-text3"
+          />
         </div>
-        <div class="mt-3 flex justify-end">
-          <button class="bg-accent bg-accent-dim border border-accent/40 text-xs font-mono px-2.5 py-1.5 rounded-md cursor-pointer text-text hover:border-accent hover:bg-accent transition-colors" onclick="openNewContactModal()">
+        <div class="flex items-center justify-between gap-2">
+          <button
+            class="flex-1 bg-accent bg-accent-dim border border-accent/60 text-[11px] font-mono px-2.5 py-1.5 rounded-md cursor-pointer text-text hover:border-accent hover:bg-accent transition-colors"
+            onclick="openNewContactModal()"
+          >
             + new contact
           </button>
+          <div id="sidebar-contacts-meta" class="text-[11px] text-text3 text-right min-w-[80px]"></div>
         </div>
       </div>
 
@@ -161,7 +178,7 @@
       <!-- Dashboard -->
       <div id="dashboard" class="hidden flex-1 overflow-y-auto p-6 px-7">
         <h2 class="text-sm font-semibold mb-5 tracking-tight">Summary — all contacts</h2>
-        <div class="grid grid-cols-3 gap-3 mb-6" id="dash-grid"></div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mb-6" id="dash-grid"></div>
         <div class="mt-6">
           <div class="text-xs text-text3 font-mono uppercase tracking-wider mb-2.5">Top contacts by inventory</div>
           <table class="w-full border-collapse bg-surface border border-border rounded-radius overflow-hidden" id="dash-table">
@@ -697,6 +714,19 @@ function showApp() {
 // ── Contact list ───────────────────────────────────────────────────────────
 function renderContactList() {
   const list = document.getElementById('contact-list');
+  const meta = document.getElementById('sidebar-contacts-meta');
+
+  // Update small stats line in sidebar header
+  if (meta) {
+    const total = contacts.length;
+    const withInventory = contacts.filter(c => (inventory[c.id] || []).length > 0).length;
+    if (!total) {
+      meta.textContent = 'No contacts yet';
+    } else {
+      meta.textContent = `${total} contact${total !== 1 ? 's' : ''}${withInventory ? ` • ${withInventory} with items` : ''}`;
+    }
+  }
+
   if (!filteredContacts.length) {
     list.innerHTML = '<div class="flex flex-col items-center justify-center flex-1 gap-2.5 text-text3 text-xs">No contacts found</div>';
     return;
@@ -706,14 +736,14 @@ function renderContactList() {
     const items = (inventory[c.id] || []);
     const outstanding = items.filter(i => (i.qty - (i.returned || 0)) > 0).length;
     const isActive = c.id === selectedContactId;
-    return `<div class="flex items-center gap-2.5 p-2.5 px-2.5 rounded-lg cursor-pointer transition-colors duration-120 relative${isActive?' bg-accent-dim':''}" onclick="selectContact('${c.id}')">
+    return `<button class="group w-full text-left flex items-center gap-2.5 p-2.5 px-2.5 rounded-radius cursor-pointer transition-colors duration-150 relative border border-transparent hover:border-border2 hover:bg-surface2${isActive ? ' bg-accent-dim border-accent/40' : ''}" onclick="selectContact('${c.id}')">
       <div class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold flex-shrink-0 font-mono" style="background:${bg};color:${fg}">${initials(c.name)}</div>
       <div class="flex-1 min-w-0">
-        <div class="text-xs font-medium whitespace-nowrap overflow-hidden text-ellipsis">${c.name}</div>
-        <div class="text-xs text-text2 whitespace-nowrap overflow-hidden text-ellipsis">${c.email || c.phone || 'No contact info'}</div>
+        <div class="text-xs font-medium whitespace-nowrap overflow-hidden text-ellipsis group-hover:text-text">${c.name}</div>
+        <div class="text-[11px] text-text3 whitespace-nowrap overflow-hidden text-ellipsis">${c.email || c.phone || 'No contact info'}</div>
       </div>
-      ${outstanding ? `<span class="text-xs font-mono py-0.5 px-1.5 rounded-full bg-accent-dim text-accent2 border border-accent/20 flex-shrink-0">${outstanding}</span>` : ''}
-    </div>`;
+      ${outstanding ? `<span class="text-[11px] font-mono py-0.5 px-1.5 rounded-full bg-accent-dim text-accent2 border border-accent/30 flex-shrink-0">${outstanding}</span>` : ''}
+    </button>`;
   }).join('');
 }
 
@@ -886,8 +916,17 @@ async function confirmReturn() {
 // ── Dashboard ──────────────────────────────────────────────────────────────
 function switchView(view) {
   currentView = view;
-  document.getElementById('tab-contacts').classList.toggle('active', view === 'contacts');
-  document.getElementById('tab-dash').classList.toggle('active', view === 'dashboard');
+  
+  const tabContacts = document.getElementById('tab-contacts');
+  const tabDash = document.getElementById('tab-dash');
+  
+  if (view === 'contacts') {
+    tabContacts.className = "px-2.5 py-1 rounded-md text-[11px] font-mono cursor-pointer text-text bg-accent-dim border border-accent/40";
+    tabDash.className = "px-2.5 py-1 rounded-md text-[11px] font-mono cursor-pointer text-text2 border border-transparent hover:text-text";
+  } else {
+    tabContacts.className = "px-2.5 py-1 rounded-md text-[11px] font-mono cursor-pointer text-text2 border border-transparent hover:text-text";
+    tabDash.className = "px-2.5 py-1 rounded-md text-[11px] font-mono cursor-pointer text-text bg-accent-dim border border-accent/40";
+  }
 
   if (view === 'dashboard') {
     // On mobile, close sidebar when showing inventory summary
@@ -927,24 +966,23 @@ function renderDashboard() {
   }).filter(r => r.items > 0).sort((a,b) => b.bal - a.bal);
 
   document.getElementById('dash-grid').innerHTML = `
-    <div class="dash-stat"><div class="dl">total contacts tracked</div><div class="dv" style="color:var(--accent2)">${rows.length}</div></div>
-    <div class="dash-stat"><div class="dl">total units given</div><div class="dv">${totalOut}</div></div>
-    <div class="dash-stat"><div class="dl">units returned</div><div class="dv" style="color:var(--green)">${totalReturned}</div></div>
-    <div class="dash-stat"><div class="dl">outstanding balance</div><div class="dv" style="color:${totalOut-totalReturned>0?'var(--red)':'var(--text)'}">${totalOut-totalReturned}</div></div>
-    <div class="dash-stat"><div class="dl">total line items</div><div class="dv">${totalItems}</div></div>
-    <div class="dash-stat"><div class="dl">return rate</div><div class="dv" style="color:var(--amber)">${totalOut>0?Math.round(totalReturned/totalOut*100):0}%</div></div>
+    <div class="bg-surface border border-border rounded-radius p-3 px-3.5"><div class="text-xs text-text3 font-mono uppercase tracking-wider mb-1">total contacts tracked</div><div class="text-xl font-semibold font-mono tracking-tight text-accent2">${rows.length}</div></div>
+    <div class="bg-surface border border-border rounded-radius p-3 px-3.5"><div class="text-xs text-text3 font-mono uppercase tracking-wider mb-1">total units given</div><div class="text-xl font-semibold font-mono tracking-tight">${totalOut}</div></div>
+    <div class="bg-surface border border-border rounded-radius p-3 px-3.5"><div class="text-xs text-text3 font-mono uppercase tracking-wider mb-1">units returned</div><div class="text-xl font-semibold font-mono tracking-tight text-green">${totalReturned}</div></div>
+    <div class="bg-surface border border-border rounded-radius p-3 px-3.5"><div class="text-xs text-text3 font-mono uppercase tracking-wider mb-1">outstanding balance</div><div class="text-xl font-semibold font-mono tracking-tight ${totalOut-totalReturned>0?'text-red':'text-text'}">${totalOut-totalReturned}</div></div>
+    <div class="bg-surface border border-border rounded-radius p-3 px-3.5"><div class="text-xs text-text3 font-mono uppercase tracking-wider mb-1">total line items</div><div class="text-xl font-semibold font-mono tracking-tight">${totalItems}</div></div>
+    <div class="bg-surface border border-border rounded-radius p-3 px-3.5"><div class="text-xs text-text3 font-mono uppercase tracking-wider mb-1">return rate</div><div class="text-xl font-semibold font-mono tracking-tight text-amber">${totalOut>0?Math.round(totalReturned/totalOut*100):0}%</div></div>
   `;
 
   document.getElementById('dash-tbody').innerHTML = rows.length ? rows.map(r => {
-    const [bg, fg] = colorFor(r.c.name);
     return `<tr>
-      <td><a class="nav-link" onclick="goToContact('${r.c.id}')">${r.c.name}</a></td>
-      <td style="font-family:var(--mono)">${r.items}</td>
-      <td style="font-family:var(--mono)">${r.qtyOut}</td>
-      <td style="font-family:var(--mono);color:var(--green)">${r.qtyRet}</td>
-      <td style="font-family:var(--mono);color:${r.bal>0?'var(--red)':'var(--text2)'}">${r.bal}</td>
+      <td class="p-2.5 px-3.5 border-b border-border text-xs"><a class="text-accent2 hover:text-text cursor-pointer transition-colors" onclick="goToContact('${r.c.id}')">${r.c.name}</a></td>
+      <td class="p-2.5 px-3.5 border-b border-border text-xs font-mono">${r.items}</td>
+      <td class="p-2.5 px-3.5 border-b border-border text-xs font-mono">${r.qtyOut}</td>
+      <td class="p-2.5 px-3.5 border-b border-border text-xs font-mono text-green">${r.qtyRet}</td>
+      <td class="p-2.5 px-3.5 border-b border-border text-xs font-mono ${r.bal>0?'text-red':'text-text2'}">${r.bal}</td>
     </tr>`;
-  }).join('') : `<tr><td colspan="5" style="text-align:center;color:var(--text3);padding:24px;font-size:12px">No inventory tracked yet</td></tr>`;
+  }).join('') : `<tr><td colspan="5" class="py-6 border-b border-border text-center text-text3 text-xs">No inventory tracked yet</td></tr>`;
 
   const allItems = [];
   contacts.forEach(c => {
@@ -955,18 +993,18 @@ function renderDashboard() {
   document.getElementById('all-items-tbody').innerHTML = allItems.length ? allItems.map(item => {
     const b = bal(item);
     let s;
-    if (b <= 0) s = `<span class="pill pill-returned">returned</span>`;
-    else if ((item.returned||0) > 0) s = `<span class="pill pill-partial">partial</span>`;
-    else s = `<span class="pill pill-out">out</span>`;
+    if (b <= 0) s = `<span class="inline-block px-1.5 py-0.5 rounded text-[10px] font-mono tracking-widest uppercase bg-green-dim text-green border border-green/30">returned</span>`;
+    else if ((item.returned||0) > 0) s = `<span class="inline-block px-1.5 py-0.5 rounded text-[10px] font-mono tracking-widest uppercase bg-amber-dim text-amber border border-amber/30">partial</span>`;
+    else s = `<span class="inline-block px-1.5 py-0.5 rounded text-[10px] font-mono tracking-widest uppercase bg-red-dim text-red border border-red/30">out</span>`;
     return `<tr>
-      <td><a class="nav-link" onclick="goToContact('${item.contactId}')">${item.contactName}</a></td>
-      <td style="font-weight:500">${item.name}</td>
-      <td style="font-family:var(--mono)">${item.qty}</td>
-      <td style="font-family:var(--mono);font-size:11px;color:var(--text2)">${item.date}</td>
-      <td>${s}</td>
-      <td style="color:var(--text2)">${item.notes||'—'}</td>
+      <td class="p-2.5 px-3.5 border-b border-border text-xs font-medium"><a class="text-accent2 hover:text-text cursor-pointer transition-colors" onclick="goToContact('${item.contactId}')">${item.contactName}</a></td>
+      <td class="p-2.5 px-3.5 border-b border-border text-xs text-text">${item.name}</td>
+      <td class="p-2.5 px-3.5 border-b border-border text-xs font-mono">${item.qty}</td>
+      <td class="p-2.5 px-3.5 border-b border-border text-xs font-mono text-text2">${item.date}</td>
+      <td class="p-2.5 px-3.5 border-b border-border">${s}</td>
+      <td class="p-2.5 px-3.5 border-b border-border text-xs text-text2">${item.notes||'—'}</td>
     </tr>`;
-  }).join('') : `<tr><td colspan="6" style="text-align:center;color:var(--text3);padding:24px;font-size:12px">No items tracked yet</td></tr>`;
+  }).join('') : `<tr><td colspan="6" class="py-6 border-b border-border text-center text-text3 text-xs">No items tracked yet</td></tr>`;
 }
 
 function goToContact(id) {
