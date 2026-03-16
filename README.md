@@ -17,30 +17,39 @@ A simple, modern web application for tracking inventory items lent to contacts. 
 
 ### Prerequisites
 
+- Node.js 16+ and npm
 - A modern web browser (Chrome, Firefox, Safari, Edge)
-- Local web server (optional, but recommended for full functionality)
 
 ### Installation
 
-1. Clone or download the repository
-2. Serve the files using a local web server:
+1. Clone or download repository
+2. Install dependencies:
 
 ```bash
-# Using Python 3
-python -m http.server 8000
-
-# Using Node.js (if you have http-server installed)
-npx http-server
-
-# Using PHP
-php -S localhost:8000
+npm install
 ```
 
-3. Open `http://localhost:8000` in your browser
+3. Start development server:
 
-### Direct File Access
+```bash
+npm run dev
+```
 
-You can also open `index.html` directly in your browser, but some features may be limited due to browser security restrictions.
+4. Open `http://localhost:5173` in your browser (Vite's default port)
+
+### Building for Production
+
+```bash
+npm run build
+```
+
+This creates optimized files in the `dist/` directory.
+
+### Preview Production Build
+
+```bash
+npm run preview
+```
 
 ## Usage
 
@@ -93,9 +102,10 @@ Data is persisted locally in your browser and remains available between sessions
 
 ### Architecture
 
-- **Frontend**: Vanilla HTML, CSS, JavaScript
+- **Frontend**: Vanilla HTML, CSS, JavaScript (ES modules)
+- **Build Tool**: Vite for development and bundling
 - **Database**: SQLite (wa-sqlite) with localStorage fallback
-- **Styling**: Custom CSS with Tailwind-inspired utility classes
+- **Styling**: Tailwind CSS with custom utility classes
 - **Icons**: Inline SVG icons for minimal dependencies
 
 ### Browser Compatibility
@@ -109,33 +119,56 @@ Data is persisted locally in your browser and remains available between sessions
 
 ```
 contacts-inventory/
-├── index.html          # Main application file
+├── index.html          # Main HTML entry point
+├── package.json         # Project dependencies and scripts
 ├── README.md           # This file
-└── dist/               # Build output directory (if using build tools)
-    └── output.css       # Compiled styles
+├── src/                # Source files
+│   ├── input.css        # Tailwind CSS input
+│   └── main.js         # Main JavaScript (if using separate JS)
+└── dist/               # Build output directory
+    └── output.css       # Compiled Tailwind CSS
 ```
 
 ## Development
 
 ### Modifying Styles
 
-The application uses custom CSS classes. Main color variables are defined in the `<style>` section of `index.html`:
+The application uses Tailwind CSS with custom utility classes. To modify styles:
 
-- **Background**: `#0f0f11` (dark background)
-- **Surface**: `#18181c` (card backgrounds)
-- **Accent**: `#7c6af7` (primary accent color)
-- **Success**: `#3ecf8e` (green for returned items)
-- **Warning**: `#f5a623` (amber for partial returns)
-- **Error**: `#f97171` (red for outstanding items)
+1. **For development**: Run the CSS build watcher:
+
+```bash
+npm run css:build
+```
+
+2. **Main colors** are defined in the `<style>` section of `index.html`:
+   - **Background**: `#0f0f11` (dark background)
+   - **Surface**: `#18181c` (card backgrounds)
+   - **Accent**: `#7c6af7` (primary accent color)
+   - **Success**: `#3ecf8e` (green for returned items)
+   - **Warning**: `#f5a623` (amber for partial returns)
+   - **Error**: `#f97171` (red for outstanding items)
+
+3. **Tailwind classes** are available for rapid development
 
 ### Adding Features
 
-The codebase is organized into clear sections:
+The codebase is organized into clear sections in `index.html`:
 
 1. **Database Layer**: `SQLiteDB` class with fallback support
 2. **State Management**: Global variables for contacts and inventory
 3. **UI Rendering**: Functions for updating the interface
 4. **Event Handlers**: User interaction handlers
+
+### Development Workflow
+
+```bash
+# Start CSS watcher for style changes
+npm run css:build
+
+# In another terminal, start Vite dev server
+npm run dev
+```
 
 ## License
 
