@@ -59,10 +59,10 @@
 
 <!-- APP -->
 <div id="app" class="block h-screen overflow-hidden">
-  <div class="grid grid-cols-[260px_1fr] h-full">
+  <div class="grid h-full grid-cols-1 sm:grid-cols-[260px_1fr]">
 
     <!-- SIDEBAR -->
-    <div class="bg-surface border-r border-border flex flex-col overflow-hidden">
+    <div id="sidebar" class="bg-surface border-r border-border flex flex-col overflow-hidden">
       <div class="p-5 px-4 pb-3 border-b border-border">
         <div class="flex items-center gap-2 mb-3.5">
           <div class="w-7 h-7 bg-accent-dim border border-accent-dim/25 rounded-lg flex items-center justify-center text-xs">
@@ -80,6 +80,11 @@
           <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-text3 text-xs pointer-events-none">⌕</span>
           <input type="text" placeholder="Search contacts..." id="search-input" oninput="filterContacts()" class="w-full bg-surface2 border border-border rounded-lg py-2 px-2.5 pl-7.5 text-text font-sans text-xs outline-none transition-colors duration-150 focus:border-accent placeholder-text3" />
         </div>
+        <div class="mt-3 flex justify-end">
+          <button class="bg-accent bg-accent-dim border border-accent/40 text-xs font-mono px-2.5 py-1.5 rounded-md cursor-pointer text-text hover:border-accent hover:bg-accent transition-colors" onclick="openNewContactModal()">
+            + new contact
+          </button>
+        </div>
       </div>
 
       <div class="flex-1 overflow-y-auto p-2 custom-scrollbar" id="contact-list">
@@ -88,21 +93,19 @@
           <span>Loading contacts…</span>
         </div>
       </div>
-
-      <div class="p-3 px-4 border-t border-border">
-        <div class="flex items-center gap-2">
-          <div class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-semibold flex-shrink-0 font-mono bg-accent-dim text-accent2" id="user-avatar" style="width:28px;height:28px;font-size:10px">–</div>
-          <div class="flex-1 min-w-0">
-            <div class="text-xs font-semibold whitespace-nowrap overflow-hidden text-ellipsis" id="user-name">–</div>
-            <div class="text-xs text-text2 whitespace-nowrap overflow-hidden text-ellipsis" id="user-email">–</div>
-          </div>
-          <button class="bg-none border border-border2 rounded-md text-text2 text-xs font-mono py-1 px-2 cursor-pointer whitespace-nowrap transition-colors duration-120 hover:text-red hover:border-red" onclick="signOut()">sign out</button>
-        </div>
-      </div>
     </div>
 
     <!-- MAIN PANEL -->
-    <div class="flex flex-col overflow-hidden bg-bg" id="main-panel">
+    <div class="relative flex flex-col overflow-hidden bg-bg" id="main-panel">
+
+      <!-- Mobile sidebar toggle -->
+      <button
+        id="sidebar-toggle"
+        class="sm:hidden absolute top-3 left-3 z-20 bg-surface2 border border-border2 rounded-lg px-3 py-1.5 text-xs font-mono text-text2 flex items-center gap-1"
+        onclick="toggleSidebar()"
+      >
+        ☰ contacts
+      </button>
 
       <!-- No contact selected -->
       <div class="flex flex-col items-center justify-center flex-1 gap-2.5 text-text3" id="no-selection">
@@ -211,6 +214,32 @@
   </div>
 </div>
 
+<!-- New contact modal -->
+<div class="fixed inset-0 bg-black/70 flex items-center justify-center z-100 hidden" id="new-contact-modal">
+  <div class="bg-surface border border-border2 rounded-radius-lg p-7 w-90 max-w-md">
+    <h3 class="text-sm font-semibold mb-1.5">Add new contact</h3>
+    <p class="text-xs text-text2 mb-5">Create a contact to start tracking their inventory.</p>
+    <div class="flex flex-col gap-3.5 mb-3.5">
+      <div class="flex flex-col gap-1">
+        <label class="text-xs text-text3 font-mono uppercase tracking-wider">Name</label>
+        <input type="text" id="new-contact-name" class="w-full bg-surface2 border border-border2 rounded-lg py-1.5 px-2.5 text-text font-sans text-xs outline-none transition-colors duration-150 focus:border-accent" placeholder="e.g. Jane Doe" />
+      </div>
+      <div class="flex flex-col gap-1">
+        <label class="text-xs text-text3 font-mono uppercase tracking-wider">Email</label>
+        <input type="email" id="new-contact-email" class="w-full bg-surface2 border border-border2 rounded-lg py-1.5 px-2.5 text-text font-sans text-xs outline-none transition-colors duration-150 focus:border-accent" placeholder="Optional email" />
+      </div>
+      <div class="flex flex-col gap-1">
+        <label class="text-xs text-text3 font-mono uppercase tracking-wider">Phone</label>
+        <input type="text" id="new-contact-phone" class="w-full bg-surface2 border border-border2 rounded-lg py-1.5 px-2.5 text-text font-sans text-xs outline-none transition-colors duration-150 focus:border-accent" placeholder="Optional phone" />
+      </div>
+    </div>
+    <div class="flex gap-2 justify-end mt-5">
+      <button class="py-2 px-3.5 bg-none border border-border2 rounded-lg text-text2 font-sans text-xs cursor-pointer" onclick="closeNewContactModal()">Cancel</button>
+      <button class="py-2 px-3.5 bg-accent border-none rounded-lg text-bg font-sans text-xs font-semibold cursor-pointer" onclick="saveNewContact()">Save contact</button>
+    </div>
+  </div>
+</div>
+
 <div class="fixed bottom-6 left-1/2 -translate-x-1/2 translate-y-20 bg-surface2 border border-border2 text-text text-xs font-mono py-2.5 px-4.5 rounded-lg z-200 transition-transform duration-250 pointer-events-none" id="toast"></div>
 
 <script>
@@ -220,6 +249,7 @@ let filteredContacts = [];
 let selectedContactId = null;
 let inventory = {}; // { contactId: [ {id, name, qty, date, notes, returned, returnDate} ] }
 let currentView = 'contacts';
+let isSidebarOpen = true;
 let returnTarget = null;
 let userInfo = { name: '', email: '' };
 
@@ -492,7 +522,6 @@ const db = new SQLiteDB();
 // ── Persist ────────────────────────────────────────────────────────────────
 async function save() {
   try {
-    await db.saveUserInfo(userInfo);
     for (const contact of contacts) {
       await db.saveContact(contact);
     }
@@ -504,7 +533,6 @@ async function load() {
   try {
     contacts = await db.getContacts();
     inventory = await db.getInventoryMap();
-    userInfo = await db.getUserInfo();
   } catch(e) {
     console.error('Load failed:', e);
   }
@@ -533,6 +561,86 @@ const COLORS = [
   ['#1e1a40','#a594fa'], ['#0f2a1e','#3ecf8e'], ['#2a1515','#f97171'],
   ['#1a1a0a','#f5a623'], ['#0d1e2d','#60b2f7'], ['#1e0d28','#d08af7']
 ];
+
+// ── Sidebar / layout helpers ─────────────────────────────────────────────────
+function updateSidebarForViewport() {
+  const sidebar = document.getElementById('sidebar');
+  const toggle = document.getElementById('sidebar-toggle');
+  if (!sidebar || !toggle) return;
+
+  if (window.innerWidth >= 640) {
+    // Desktop — always show sidebar, hide toggle
+    sidebar.style.display = 'flex';
+    toggle.style.display = 'none';
+    isSidebarOpen = true;
+  } else {
+    // Mobile — show toggle, conditionally show sidebar
+    toggle.style.display = 'flex';
+    sidebar.style.display = isSidebarOpen ? 'flex' : 'none';
+  }
+}
+
+function toggleSidebar() {
+  isSidebarOpen = !isSidebarOpen;
+  updateSidebarForViewport();
+}
+
+window.addEventListener('resize', updateSidebarForViewport);
+
+// ── New contact ──────────────────────────────────────────────────────────────
+function openNewContactModal() {
+  const m = document.getElementById('new-contact-modal');
+  if (!m) return;
+  m.classList.remove('hidden');
+  m.classList.add('flex');
+  const nameInput = document.getElementById('new-contact-name');
+  if (nameInput) {
+    nameInput.value = '';
+    nameInput.focus();
+  }
+  const emailInput = document.getElementById('new-contact-email');
+  const phoneInput = document.getElementById('new-contact-phone');
+  if (emailInput) emailInput.value = '';
+  if (phoneInput) phoneInput.value = '';
+}
+
+function closeNewContactModal() {
+  const m = document.getElementById('new-contact-modal');
+  if (!m) return;
+  m.classList.add('hidden');
+  m.classList.remove('flex');
+}
+
+async function saveNewContact() {
+  const nameEl = document.getElementById('new-contact-name');
+  const emailEl = document.getElementById('new-contact-email');
+  const phoneEl = document.getElementById('new-contact-phone');
+  if (!nameEl) return;
+  const name = nameEl.value.trim();
+  const email = emailEl ? emailEl.value.trim() : '';
+  const phone = phoneEl ? phoneEl.value.trim() : '';
+  if (!name) {
+    showToast('Contact name required');
+    if (nameEl) nameEl.focus();
+    return;
+  }
+
+  const newContact = { id: uid(), name, email, phone };
+  try {
+    await db.saveContact(newContact);
+    contacts.push(newContact);
+    filteredContacts = [...contacts];
+    renderContactList();
+    closeNewContactModal();
+    showToast('Contact added');
+    // Jump straight into the new contact's inventory view
+    switchView('contacts');
+    selectContact(newContact.id);
+  } catch (e) {
+    console.error('Failed to save contact', e);
+    showToast('Could not save contact');
+  }
+}
 
 // ── App Initialization ────────────────────────────────────────────────────────
 async function initApp() {
@@ -574,9 +682,6 @@ async function loadDemo() {
     await db.addInventoryItem(item);
   }
   
-  userInfo = { name: 'Demo User', email: 'demo@example.com' };
-  await db.saveUserInfo(userInfo);
-  
   // Load data back into memory
   contacts = await db.getContacts();
   inventory = await db.getInventoryMap();
@@ -584,20 +689,10 @@ async function loadDemo() {
 
 // ── App ────────────────────────────────────────────────────────────────────
 function showApp() {
-  document.getElementById('user-name').textContent = userInfo.name || 'User';
-  document.getElementById('user-email').textContent = userInfo.email || '';
-  const [bg, fg] = colorFor(userInfo.name);
-  const ua = document.getElementById('user-avatar');
-  ua.style.background = bg; ua.style.color = fg;
-  ua.textContent = initials(userInfo.name);
   filteredContacts = [...contacts];
   renderContactList();
 }
 
-async function signOut() {
-  await db.clearDatabase();
-  window.location.reload();
-}
 
 // ── Contact list ───────────────────────────────────────────────────────────
 function renderContactList() {
@@ -652,6 +747,12 @@ function selectContact(id) {
   renderStats();
   renderItems();
   renderContactList();
+
+  // On small screens, hide sidebar after selecting a contact
+  if (window.innerWidth < 640) {
+    isSidebarOpen = false;
+    updateSidebarForViewport();
+  }
 }
 
 // ── Stats ──────────────────────────────────────────────────────────────────
@@ -789,11 +890,21 @@ function switchView(view) {
   document.getElementById('tab-dash').classList.toggle('active', view === 'dashboard');
 
   if (view === 'dashboard') {
+    // On mobile, close sidebar when showing inventory summary
+    if (window.innerWidth < 640) {
+      isSidebarOpen = false;
+      updateSidebarForViewport();
+    }
     document.getElementById('contact-view').style.display = 'none';
     document.getElementById('no-selection').style.display = 'none';
     document.getElementById('dashboard').style.display = 'block';
     renderDashboard();
   } else {
+    // When returning to contacts on mobile, show the sidebar so user can pick a contact
+    if (window.innerWidth < 640) {
+      isSidebarOpen = true;
+      updateSidebarForViewport();
+    }
     document.getElementById('dashboard').style.display = 'none';
     if (selectedContactId) {
       document.getElementById('contact-view').style.display = 'flex';
@@ -890,12 +1001,16 @@ function downloadCSV(rows, filename) {
 
 // ── Keyboard shortcuts ─────────────────────────────────────────────────────
 document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') closeReturnModal();
+  if (e.key === 'Escape') {
+    closeReturnModal();
+    closeNewContactModal();
+  }
   if (e.key === 'Enter' && document.activeElement.id === 'f-name') addItem();
 });
 
 // ── Init ───────────────────────────────────────────────────────────────────
 (async function init() {
+  updateSidebarForViewport();
   await initApp();
 })();
 </script>
