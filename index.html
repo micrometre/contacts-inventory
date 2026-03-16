@@ -4,395 +4,53 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Inventory Tracker</title>
+<link href="/dist/output.css" rel="stylesheet">
 <style>
-  :root {
-    --bg: #0f0f11;
-    --surface: #18181c;
-    --surface2: #222228;
-    --surface3: #2a2a32;
-    --border: rgba(255,255,255,0.07);
-    --border2: rgba(255,255,255,0.12);
-    --accent: #7c6af7;
-    --accent2: #a594fa;
-    --accent-dim: rgba(124,106,247,0.15);
-    --green: #3ecf8e;
-    --green-dim: rgba(62,207,142,0.12);
-    --red: #f97171;
-    --red-dim: rgba(249,113,113,0.12);
-    --amber: #f5a623;
-    --amber-dim: rgba(245,166,35,0.12);
-    --text: #e8e8f0;
-    --text2: #8888a0;
-    --text3: #555568;
-    --radius: 10px;
-    --radius-lg: 16px;
-    --mono: 'DM Mono', monospace;
-    --sans: 'DM Sans', sans-serif;
-  }
-
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   html, body { height: 100%; }
-
   body {
-    font-family: var(--sans);
-    background: var(--bg);
-    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    background: #0f0f11;
+    color: #e8e8f0;
     font-size: 14px;
     line-height: 1.5;
     -webkit-font-smoothing: antialiased;
   }
-
-
-  /* ── App shell ── */
-  #app { display: block; height: 100vh; overflow: hidden; }
-  .layout { display: grid; grid-template-columns: 260px 1fr; height: 100%; }
-
-  /* ── Sidebar ── */
-  .sidebar {
-    background: var(--surface);
-    border-right: 1px solid var(--border);
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-  }
-  .sidebar-top {
-    padding: 20px 16px 12px;
-    border-bottom: 1px solid var(--border);
-  }
-  .sidebar-brand {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-bottom: 14px;
-  }
-  .sidebar-brand .icon {
-    width: 28px; height: 28px;
-    background: var(--accent-dim);
-    border: 1px solid rgba(124,106,247,0.25);
-    border-radius: 8px;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 13px;
-  }
-  .sidebar-brand span {
-    font-size: 13px; font-weight: 600;
-    letter-spacing: -0.2px;
-    color: var(--text);
-  }
-  .search-box {
-    position: relative;
-  }
-  .search-box input {
-    width: 100%;
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 8px 10px 8px 30px;
-    color: var(--text);
-    font-family: var(--sans);
-    font-size: 12px;
-    outline: none;
-    transition: border-color 0.15s;
-  }
-  .search-box input:focus { border-color: var(--accent); }
-  .search-box input::placeholder { color: var(--text3); }
-  .search-box .sicon {
-    position: absolute; left: 9px; top: 50%; transform: translateY(-50%);
-    color: var(--text3); font-size: 12px; pointer-events: none;
-  }
-  .contact-list { flex: 1; overflow-y: auto; padding: 8px; }
-  .contact-list::-webkit-scrollbar { width: 4px; }
-  .contact-list::-webkit-scrollbar-track { background: transparent; }
-  .contact-list::-webkit-scrollbar-thumb { background: var(--surface3); border-radius: 4px; }
-
-  .contact-item {
-    display: flex; align-items: center; gap: 10px;
-    padding: 9px 10px; border-radius: 8px;
-    cursor: pointer; transition: background 0.12s;
-    position: relative;
-  }
-  .contact-item:hover { background: var(--surface2); }
-  .contact-item.active { background: var(--accent-dim); }
-  .contact-item.active::before {
-    content: '';
-    position: absolute; left: 0; top: 20%; bottom: 20%;
-    width: 2px; background: var(--accent);
-    border-radius: 2px;
-  }
-  .avatar {
-    width: 32px; height: 32px; border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 11px; font-weight: 600; flex-shrink: 0;
-    font-family: var(--mono);
-  }
-  .ci-info { flex: 1; min-width: 0; }
-  .ci-name { font-size: 12px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .ci-sub { font-size: 11px; color: var(--text2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .ci-badge {
-    font-size: 10px; font-family: var(--mono);
-    padding: 2px 6px; border-radius: 10px;
-    background: var(--accent-dim); color: var(--accent2);
-    border: 1px solid rgba(124,106,247,0.2);
-    flex-shrink: 0;
-  }
-
-  .sidebar-footer {
-    padding: 12px 16px;
-    border-top: 1px solid var(--border);
-  }
-  .user-row {
-    display: flex; align-items: center; gap: 8px;
-  }
-  .user-info { flex: 1; min-width: 0; }
-  .user-name { font-size: 11px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .user-email { font-size: 10px; color: var(--text2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .sign-out-btn {
-    background: none; border: 1px solid var(--border2); border-radius: 6px;
-    color: var(--text2); font-size: 10px; font-family: var(--mono);
-    padding: 4px 8px; cursor: pointer; white-space: nowrap;
-    transition: color 0.12s, border-color 0.12s;
-  }
-  .sign-out-btn:hover { color: var(--red); border-color: var(--red); }
-
-  /* ── Main panel ── */
-  .main-panel { display: flex; flex-direction: column; overflow: hidden; background: var(--bg); }
-
-  .main-header {
-    padding: 20px 28px 16px;
-    border-bottom: 1px solid var(--border);
-    display: flex; align-items: center; gap: 14px;
-    flex-shrink: 0;
-  }
-  .header-avatar { width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 600; font-family: var(--mono); flex-shrink: 0; }
-  .header-info { flex: 1; }
-  .header-name { font-size: 17px; font-weight: 600; letter-spacing: -0.3px; }
-  .header-sub { font-size: 12px; color: var(--text2); margin-top: 1px; }
-  .header-actions { display: flex; gap: 8px; }
-
-  .btn-icon {
-    background: var(--surface);
-    border: 1px solid var(--border2);
-    border-radius: 8px;
-    padding: 7px 12px;
-    color: var(--text2);
-    font-size: 11px;
-    font-family: var(--mono);
-    cursor: pointer;
-    display: flex; align-items: center; gap: 5px;
-    transition: color 0.12s, border-color 0.12s, background 0.12s;
-    white-space: nowrap;
-  }
-  .btn-icon:hover { color: var(--text); border-color: var(--border2); background: var(--surface2); }
-  .btn-icon.export-btn:hover { color: var(--green); border-color: var(--green); }
-
-  /* ── Stats bar ── */
-  .stats-bar {
-    display: grid; grid-template-columns: repeat(4, 1fr);
-    padding: 16px 28px; gap: 12px;
-    border-bottom: 1px solid var(--border);
-    flex-shrink: 0;
-  }
-  .stat-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 12px 14px;
-  }
-  .stat-label { font-size: 10px; color: var(--text3); font-family: var(--mono); text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 4px; }
-  .stat-value { font-size: 20px; font-weight: 600; font-family: var(--mono); letter-spacing: -0.5px; }
-  .stat-value.green { color: var(--green); }
-  .stat-value.red { color: var(--red); }
-  .stat-value.accent { color: var(--accent2); }
-
-  /* ── Add item form ── */
-  .add-form {
-    padding: 14px 28px;
-    border-bottom: 1px solid var(--border);
-    flex-shrink: 0;
-    display: flex; gap: 8px; align-items: flex-end;
-  }
-  .form-field { display: flex; flex-direction: column; gap: 4px; }
-  .form-field label { font-size: 10px; color: var(--text3); font-family: var(--mono); text-transform: uppercase; letter-spacing: 0.07em; }
-  .form-field input, .form-field select, .form-field textarea {
-    background: var(--surface);
-    border: 1px solid var(--border2);
-    border-radius: 8px;
-    padding: 7px 10px;
-    color: var(--text);
-    font-family: var(--sans);
-    font-size: 12px;
-    outline: none;
-    transition: border-color 0.15s;
-  }
-  .form-field input:focus, .form-field select:focus { border-color: var(--accent); }
-  .form-field select { background-color: var(--surface); cursor: pointer; }
-  .form-field option { background: var(--surface2); }
-  .ff-name { flex: 1; }
-  .ff-qty input { width: 64px; }
-  .ff-date input { width: 130px; }
-  .ff-notes input { width: 160px; }
-  .add-btn {
-    padding: 8px 16px;
-    background: var(--accent);
-    color: #fff;
-    border: none;
-    border-radius: 8px;
-    font-family: var(--sans);
-    font-size: 12px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: opacity 0.15s;
-    height: 34px;
-    white-space: nowrap;
-    align-self: flex-end;
-  }
-  .add-btn:hover { opacity: 0.85; }
-
-  /* ── Items table ── */
-  .items-wrap { flex: 1; overflow-y: auto; padding: 16px 28px; }
-  .items-wrap::-webkit-scrollbar { width: 4px; }
-  .items-wrap::-webkit-scrollbar-track { background: transparent; }
-  .items-wrap::-webkit-scrollbar-thumb { background: var(--surface3); border-radius: 4px; }
-
-  .section-title {
-    font-size: 10px; color: var(--text3);
-    font-family: var(--mono); text-transform: uppercase; letter-spacing: 0.09em;
-    margin-bottom: 10px;
-  }
-
-  table { width: 100%; border-collapse: collapse; }
-  thead th {
-    font-size: 10px; font-family: var(--mono); color: var(--text3);
-    text-transform: uppercase; letter-spacing: 0.07em;
-    text-align: left; padding: 0 10px 8px; font-weight: 500;
-    border-bottom: 1px solid var(--border);
-  }
-  tbody tr { border-bottom: 1px solid var(--border); transition: background 0.1s; }
-  tbody tr:hover { background: var(--surface); }
-  tbody tr:last-child { border-bottom: none; }
-  tbody td { padding: 10px; font-size: 12px; vertical-align: middle; }
-  td.item-name-cell { font-weight: 500; }
-  td.qty-cell { font-family: var(--mono); text-align: right; }
-  td.date-cell { color: var(--text2); font-family: var(--mono); font-size: 11px; }
-  td.type-cell {}
-  td.notes-cell { color: var(--text2); max-width: 200px; }
-  td.status-cell { text-align: center; }
-  td.actions-cell { text-align: right; }
-
-  .pill {
-    display: inline-block; font-size: 10px; font-family: var(--mono);
-    padding: 3px 8px; border-radius: 20px; font-weight: 500;
-  }
-  .pill-out { background: var(--accent-dim); color: var(--accent2); border: 1px solid rgba(124,106,247,0.2); }
-  .pill-returned { background: var(--green-dim); color: var(--green); border: 1px solid rgba(62,207,142,0.2); }
-  .pill-partial { background: var(--amber-dim); color: var(--amber); border: 1px solid rgba(245,166,35,0.2); }
-
-  .row-btn {
-    background: none; border: none; cursor: pointer;
-    font-size: 11px; font-family: var(--mono);
-    padding: 4px 8px; border-radius: 6px;
-    transition: background 0.12s, color 0.12s;
-    color: var(--text3);
-  }
-  .row-btn:hover { background: var(--surface2); color: var(--text); }
-  .row-btn.ret { color: var(--text3); }
-  .row-btn.ret:hover { color: var(--green); background: var(--green-dim); }
-  .row-btn.del:hover { color: var(--red); background: var(--red-dim); }
-
-  /* ── Empty state ── */
-  .empty-state {
-    display: flex; flex-direction: column; align-items: center;
-    justify-content: center; height: 200px; gap: 8px;
-    color: var(--text3);
-  }
-  .empty-state .eicon { font-size: 28px; opacity: 0.4; }
-  .empty-state p { font-size: 13px; }
-
-  /* ── Dashboard (summary) ── */
-  #dashboard {
-    display: none; flex: 1; overflow-y: auto; padding: 24px 28px;
-  }
-  #dashboard h2 { font-size: 15px; font-weight: 600; margin-bottom: 20px; letter-spacing: -0.2px; }
-  .dash-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 24px; }
-  .dash-stat {
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: var(--radius); padding: 16px;
-  }
-  .dash-stat .dl { font-size: 10px; color: var(--text3); font-family: var(--mono); text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 6px; }
-  .dash-stat .dv { font-size: 26px; font-weight: 600; font-family: var(--mono); letter-spacing: -0.5px; }
-  .dash-table-wrap { margin-top: 24px; }
-  .dash-table-title { font-size: 10px; color: var(--text3); font-family: var(--mono); text-transform: uppercase; letter-spacing: 0.09em; margin-bottom: 10px; }
-  .dash-table { width: 100%; border-collapse: collapse; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
-  .dash-table thead th { font-size: 10px; font-family: var(--mono); color: var(--text3); text-transform: uppercase; letter-spacing: 0.07em; text-align: left; padding: 10px 14px; font-weight: 500; border-bottom: 1px solid var(--border); }
-  .dash-table tbody tr { border-bottom: 1px solid var(--border); }
-  .dash-table tbody tr:last-child { border-bottom: none; }
-  .dash-table tbody td { padding: 10px 14px; font-size: 12px; }
-  .dash-table .nav-link { color: var(--accent2); cursor: pointer; text-decoration: none; font-weight: 500; }
-  .dash-table .nav-link:hover { text-decoration: underline; }
-
-  /* ── Nav tabs ── */
-  .nav-tabs { display: flex; gap: 2px; padding: 4px; background: var(--surface); border-radius: 9px; border: 1px solid var(--border); }
-  .nav-tab {
-    padding: 5px 12px; border-radius: 7px; font-size: 11px; font-family: var(--mono);
-    cursor: pointer; color: var(--text2); border: none; background: none;
-    transition: color 0.12s, background 0.12s;
-  }
-  .nav-tab:hover { color: var(--text); }
-  .nav-tab.active { background: var(--surface3); color: var(--text); }
-
-  /* ── Return modal ── */
-  .modal-overlay {
-    position: fixed; inset: 0; background: rgba(0,0,0,0.7);
-    display: flex; align-items: center; justify-content: center;
-    z-index: 100; display: none;
-  }
-  .modal-overlay.open { display: flex; }
-  .modal {
-    background: var(--surface); border: 1px solid var(--border2);
-    border-radius: var(--radius-lg); padding: 28px; width: 360px;
-  }
-  .modal h3 { font-size: 15px; font-weight: 600; margin-bottom: 6px; }
-  .modal p { font-size: 12px; color: var(--text2); margin-bottom: 20px; }
-  .modal .form-field { margin-bottom: 14px; }
-  .modal .form-field input { width: 100%; }
-  .modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 20px; }
-  .btn-cancel {
-    padding: 8px 14px; background: none; border: 1px solid var(--border2);
-    border-radius: 8px; color: var(--text2); font-family: var(--sans); font-size: 12px;
-    cursor: pointer;
-  }
-  .btn-return {
-    padding: 8px 14px; background: var(--green); border: none;
-    border-radius: 8px; color: #0f0f11; font-family: var(--sans); font-size: 12px;
-    font-weight: 600; cursor: pointer;
-  }
-
-  .toast {
-    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px);
-    background: var(--surface2); border: 1px solid var(--border2);
-    color: var(--text); font-size: 12px; font-family: var(--mono);
-    padding: 10px 18px; border-radius: 8px; z-index: 200;
-    transition: transform 0.25s ease;
-    pointer-events: none;
-  }
-  .toast.show { transform: translateX(-50%) translateY(0); }
-
-  .loading-contacts {
-    flex: 1; display: flex; align-items: center; justify-content: center;
-    flex-direction: column; gap: 10px; color: var(--text3); font-size: 13px;
-  }
-  .spinner {
-    width: 20px; height: 20px; border: 2px solid var(--surface3);
-    border-top-color: var(--accent); border-radius: 50%;
-    animation: spin 0.7s linear infinite;
-  }
+  .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+  .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+  .custom-scrollbar::-webkit-scrollbar-thumb { background: #2a2a32; border-radius: 4px; }
   @keyframes spin { to { transform: rotate(360deg); } }
-
-  .no-selection {
-    flex: 1; display: flex; align-items: center; justify-content: center;
-    flex-direction: column; gap: 10px; color: var(--text3);
-  }
-  .no-selection .ns-icon { font-size: 36px; opacity: 0.2; }
-  .no-selection p { font-size: 13px; }
+  
+  /* Custom utility classes for our theme colors */
+  .bg-surface { background-color: #18181c; }
+  .bg-surface2 { background-color: #222228; }
+  .bg-surface3 { background-color: #2a2a32; }
+  .bg-accent { background-color: #7c6af7; }
+  .bg-accent-dim { background-color: rgba(124,106,247,0.15); }
+  .bg-green-dim { background-color: rgba(62,207,142,0.12); }
+  .bg-amber-dim { background-color: rgba(245,166,35,0.12); }
+  .bg-red-dim { background-color: rgba(249,113,113,0.12); }
+  
+  .border-border { border-color: rgba(255,255,255,0.07); }
+  .border-border2 { border-color: rgba(255,255,255,0.12); }
+  .border-accent { border-color: #7c6af7; }
+  .border-green { border-color: #3ecf8e; }
+  .border-red { border-color: #f97171; }
+  .border-amber { border-color: #f5a623; }
+  
+  .text-text { color: #e8e8f0; }
+  .text-text2 { color: #8888a0; }
+  .text-text3 { color: #555568; }
+  .text-accent2 { color: #a594fa; }
+  .text-green { color: #3ecf8e; }
+  .text-red { color: #f97171; }
+  .text-amber { color: #f5a623; }
+  
+  .rounded-radius { border-radius: 10px; }
+  .rounded-radius-lg { border-radius: 16px; }
+  
+  .font-mono { font-family: 'DM Mono', monospace; }
+  .font-sans { font-family: 'DM Sans', sans-serif; }
 </style>
 <script src="/sqlite3.js"></script>
 <script src="/sqlite3-worker1-promiser.js"></script>
@@ -400,125 +58,127 @@
 <body>
 
 <!-- APP -->
-<div id="app">
-  <div class="layout">
+<div id="app" class="block h-screen overflow-hidden">
+  <div class="grid grid-cols-[260px_1fr] h-full">
 
     <!-- SIDEBAR -->
-    <div class="sidebar">
-      <div class="sidebar-top">
-        <div class="sidebar-brand">
-          <div class="icon">📦</div>
-          <span>Inventory</span>
-          <div style="margin-left:auto">
-            <div class="nav-tabs">
-              <button class="nav-tab active" onclick="switchView('contacts')" id="tab-contacts">contacts</button>
-              <button class="nav-tab" onclick="switchView('dashboard')" id="tab-dash">summary</button>
+    <div class="bg-surface border-r border-border flex flex-col overflow-hidden">
+      <div class="p-5 px-4 pb-3 border-b border-border">
+        <div class="flex items-center gap-2 mb-3.5">
+          <div class="w-7 h-7 bg-accent-dim border border-accent-dim/25 rounded-lg flex items-center justify-center text-xs">
+            📦
+          </div>
+          <span class="text-xs font-semibold tracking-tight text-text">Inventory</span>
+          <div class="ml-auto">
+            <div class="flex gap-0.5 p-1 bg-surface rounded-lg border border-border">
+              <button class="px-3 py-1.5 rounded-md text-xs font-mono cursor-pointer text-text2 border-none bg-none transition-colors duration-120 hover:text-text active" onclick="switchView('contacts')" id="tab-contacts">contacts</button>
+              <button class="px-3 py-1.5 rounded-md text-xs font-mono cursor-pointer text-text2 border-none bg-none transition-colors duration-120 hover:text-text" onclick="switchView('dashboard')" id="tab-dash">summary</button>
             </div>
           </div>
         </div>
-        <div class="search-box">
-          <span class="sicon">⌕</span>
-          <input type="text" placeholder="Search contacts..." id="search-input" oninput="filterContacts()" />
+        <div class="relative">
+          <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-text3 text-xs pointer-events-none">⌕</span>
+          <input type="text" placeholder="Search contacts..." id="search-input" oninput="filterContacts()" class="w-full bg-surface2 border border-border rounded-lg py-2 px-2.5 pl-7.5 text-text font-sans text-xs outline-none transition-colors duration-150 focus:border-accent placeholder-text3" />
         </div>
       </div>
 
-      <div class="contact-list" id="contact-list">
-        <div class="loading-contacts">
-          <div class="spinner"></div>
+      <div class="flex-1 overflow-y-auto p-2 custom-scrollbar" id="contact-list">
+        <div class="flex flex-col items-center justify-center flex-1 gap-2.5 text-text3 text-xs">
+          <div class="w-5 h-5 border-2 border-surface3 border-t-accent rounded-full animate-spin"></div>
           <span>Loading contacts…</span>
         </div>
       </div>
 
-      <div class="sidebar-footer">
-        <div class="user-row">
-          <div class="avatar" id="user-avatar" style="width:28px;height:28px;font-size:10px;background:var(--accent-dim);color:var(--accent2)">–</div>
-          <div class="user-info">
-            <div class="user-name" id="user-name">–</div>
-            <div class="user-email" id="user-email">–</div>
+      <div class="p-3 px-4 border-t border-border">
+        <div class="flex items-center gap-2">
+          <div class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-semibold flex-shrink-0 font-mono bg-accent-dim text-accent2" id="user-avatar" style="width:28px;height:28px;font-size:10px">–</div>
+          <div class="flex-1 min-w-0">
+            <div class="text-xs font-semibold whitespace-nowrap overflow-hidden text-ellipsis" id="user-name">–</div>
+            <div class="text-xs text-text2 whitespace-nowrap overflow-hidden text-ellipsis" id="user-email">–</div>
           </div>
-          <button class="sign-out-btn" onclick="signOut()">sign out</button>
+          <button class="bg-none border border-border2 rounded-md text-text2 text-xs font-mono py-1 px-2 cursor-pointer whitespace-nowrap transition-colors duration-120 hover:text-red hover:border-red" onclick="signOut()">sign out</button>
         </div>
       </div>
     </div>
 
     <!-- MAIN PANEL -->
-    <div class="main-panel" id="main-panel">
+    <div class="flex flex-col overflow-hidden bg-bg" id="main-panel">
 
       <!-- No contact selected -->
-      <div class="no-selection" id="no-selection">
-        <div class="ns-icon">👤</div>
-        <p>Select a contact to manage their inventory</p>
+      <div class="flex flex-col items-center justify-center flex-1 gap-2.5 text-text3" id="no-selection">
+        <div class="text-3xl opacity-20">👤</div>
+        <p class="text-sm">Select a contact to manage their inventory</p>
       </div>
 
       <!-- Contact view -->
-      <div id="contact-view" style="display:none; flex-direction:column; height:100%; overflow:hidden;">
+      <div id="contact-view" class="hidden flex-col h-full overflow-hidden" style="display:none">
 
-        <div class="main-header">
-          <div class="header-avatar" id="h-avatar"></div>
-          <div class="header-info">
-            <div class="header-name" id="h-name"></div>
-            <div class="header-sub" id="h-sub"></div>
+        <div class="p-5 px-7 pb-4 border-b border-border flex items-center gap-3.5 flex-shrink-0">
+          <div class="w-11 h-11 rounded-full flex items-center justify-center text-base font-semibold font-mono flex-shrink-0" id="h-avatar"></div>
+          <div class="flex-1">
+            <div class="text-base font-semibold tracking-tight" id="h-name"></div>
+            <div class="text-xs text-text2 mt-0.5" id="h-sub"></div>
           </div>
-          <div class="header-actions">
-            <button class="btn-icon export-btn" onclick="exportContact()">↓ export CSV</button>
+          <div class="flex gap-2">
+            <button class="bg-surface border border-border2 rounded-lg py-1.5 px-3 text-text2 text-xs font-mono cursor-pointer flex items-center gap-1.5 transition-colors duration-120 hover:text-text hover:border-border2 hover:bg-surface2 whitespace-nowrap export-btn" onclick="exportContact()">↓ export CSV</button>
           </div>
         </div>
 
-        <div class="stats-bar" id="stats-bar"></div>
+        <div class="grid grid-cols-4 p-4 px-7 gap-3 border-b border-border flex-shrink-0" id="stats-bar"></div>
 
-        <div class="add-form">
-          <div class="form-field ff-name">
-            <label>Item Name</label>
-            <input type="text" id="f-name" placeholder="e.g. Laptop, Power drill…" />
+        <div class="p-3.5 px-7 border-b border-border flex-shrink-0 flex gap-2 items-end">
+          <div class="flex flex-col gap-1 flex-1">
+            <label class="text-xs text-text3 font-mono uppercase tracking-wider">Item Name</label>
+            <input type="text" id="f-name" placeholder="e.g. Laptop, Power drill…" class="bg-surface border border-border2 rounded-lg py-1.5 px-2.5 text-text font-sans text-xs outline-none transition-colors duration-150 focus:border-accent" />
           </div>
-          <div class="form-field ff-qty">
-            <label>Qty</label>
-            <input type="number" id="f-qty" min="1" value="1" />
+          <div class="flex flex-col gap-1">
+            <label class="text-xs text-text3 font-mono uppercase tracking-wider">Qty</label>
+            <input type="number" id="f-qty" min="1" value="1" class="bg-surface border border-border2 rounded-lg py-1.5 px-2.5 text-text font-sans text-xs outline-none transition-colors duration-150 focus:border-accent w-16" />
           </div>
-          <div class="form-field ff-date">
-            <label>Date Given</label>
-            <input type="date" id="f-date" />
+          <div class="flex flex-col gap-1">
+            <label class="text-xs text-text3 font-mono uppercase tracking-wider">Date Given</label>
+            <input type="date" id="f-date" class="bg-surface border border-border2 rounded-lg py-1.5 px-2.5 text-text font-sans text-xs outline-none transition-colors duration-150 focus:border-accent w-32.5" />
           </div>
-          <div class="form-field ff-notes">
-            <label>Notes</label>
-            <input type="text" id="f-notes" placeholder="Optional notes…" />
+          <div class="flex flex-col gap-1">
+            <label class="text-xs text-text3 font-mono uppercase tracking-wider">Notes</label>
+            <input type="text" id="f-notes" placeholder="Optional notes…" class="bg-surface border border-border2 rounded-lg py-1.5 px-2.5 text-text font-sans text-xs outline-none transition-colors duration-150 focus:border-accent w-40" />
           </div>
-          <button class="add-btn" onclick="addItem()">+ Add Item</button>
+          <button class="py-2 px-4 bg-accent text-white border-none rounded-lg font-sans text-xs font-medium cursor-pointer transition-opacity duration-150 h-8.5 whitespace-nowrap self-end" onclick="addItem()">+ Add Item</button>
         </div>
 
-        <div class="items-wrap" id="items-wrap">
-          <div class="empty-state">
-            <div class="eicon">📭</div>
-            <p>No items tracked yet</p>
+        <div class="flex-1 overflow-y-auto p-4 px-7 custom-scrollbar" id="items-wrap">
+          <div class="flex flex-col items-center justify-center h-48 gap-2 text-text3">
+            <div class="text-2xl opacity-40">📭</div>
+            <p class="text-sm">No items tracked yet — add one above</p>
           </div>
         </div>
 
       </div>
 
       <!-- Dashboard -->
-      <div id="dashboard">
-        <h2>Summary — all contacts</h2>
-        <div class="dash-grid" id="dash-grid"></div>
-        <div class="dash-table-wrap">
-          <div class="dash-table-title">Top contacts by inventory</div>
-          <table class="dash-table" id="dash-table">
+      <div id="dashboard" class="hidden flex-1 overflow-y-auto p-6 px-7">
+        <h2 class="text-sm font-semibold mb-5 tracking-tight">Summary — all contacts</h2>
+        <div class="grid grid-cols-3 gap-3 mb-6" id="dash-grid"></div>
+        <div class="mt-6">
+          <div class="text-xs text-text3 font-mono uppercase tracking-wider mb-2.5">Top contacts by inventory</div>
+          <table class="w-full border-collapse bg-surface border border-border rounded-radius overflow-hidden" id="dash-table">
             <thead>
               <tr>
-                <th>Contact</th>
-                <th>Items given</th>
-                <th>Units out</th>
-                <th>Units returned</th>
-                <th>Balance</th>
+                <th class="text-xs font-mono text-text3 uppercase tracking-wider text-left p-2.5 px-3.5 font-medium border-b border-border">Contact</th>
+                <th class="text-xs font-mono text-text3 uppercase tracking-wider text-left p-2.5 px-3.5 font-medium border-b border-border">Items given</th>
+                <th class="text-xs font-mono text-text3 uppercase tracking-wider text-left p-2.5 px-3.5 font-medium border-b border-border">Units out</th>
+                <th class="text-xs font-mono text-text3 uppercase tracking-wider text-left p-2.5 px-3.5 font-medium border-b border-border">Units returned</th>
+                <th class="text-xs font-mono text-text3 uppercase tracking-wider text-left p-2.5 px-3.5 font-medium border-b border-border">Balance</th>
               </tr>
             </thead>
             <tbody id="dash-tbody"></tbody>
           </table>
         </div>
-        <div class="dash-table-wrap" style="margin-top:28px">
-          <div class="dash-table-title">All items given out</div>
-          <table class="dash-table" id="all-items-table">
+        <div class="mt-7">
+          <div class="text-xs text-text3 font-mono uppercase tracking-wider mb-2.5">All items given out</div>
+          <table class="w-full border-collapse bg-surface border border-border rounded-radius overflow-hidden" id="all-items-table">
             <thead>
-              <tr><th>Contact</th><th>Item</th><th>Qty</th><th>Date</th><th>Status</th><th>Notes</th></tr>
+              <tr><th class="text-xs font-mono text-text3 uppercase tracking-wider text-left p-2.5 px-3.5 font-medium border-b border-border">Contact</th><th class="text-xs font-mono text-text3 uppercase tracking-wider text-left p-2.5 px-3.5 font-medium border-b border-border">Item</th><th class="text-xs font-mono text-text3 uppercase tracking-wider text-left p-2.5 px-3.5 font-medium border-b border-border">Qty</th><th class="text-xs font-mono text-text3 uppercase tracking-wider text-left p-2.5 px-3.5 font-medium border-b border-border">Date</th><th class="text-xs font-mono text-text3 uppercase tracking-wider text-left p-2.5 px-3.5 font-medium border-b border-border">Status</th><th class="text-xs font-mono text-text3 uppercase tracking-wider text-left p-2.5 px-3.5 font-medium border-b border-border">Notes</th></tr>
             </thead>
             <tbody id="all-items-tbody"></tbody>
           </table>
@@ -530,26 +190,28 @@
 </div>
 
 <!-- Return modal -->
-<div class="modal-overlay" id="return-modal">
-  <div class="modal">
-    <h3>Mark as returned</h3>
-    <p id="return-modal-desc">How many units were returned?</p>
-    <div class="form-field">
-      <label>Qty Returned</label>
-      <input type="number" id="return-qty" min="1" value="1" />
+<div class="fixed inset-0 bg-black/70 flex items-center justify-center z-100 hidden" id="return-modal">
+  <div class="bg-surface border border-border2 rounded-radius-lg p-7 w-90">
+    <h3 class="text-sm font-semibold mb-1.5">Mark as returned</h3>
+    <p class="text-xs text-text2 mb-5" id="return-modal-desc">How many units were returned?</p>
+    <div class="flex flex-col gap-3.5 mb-3.5">
+      <div class="flex flex-col gap-1">
+        <label class="text-xs text-text3 font-mono uppercase tracking-wider">Qty Returned</label>
+        <input type="number" id="return-qty" min="1" value="1" class="w-full bg-surface border border-border2 rounded-lg py-1.5 px-2.5 text-text font-sans text-xs outline-none transition-colors duration-150 focus:border-accent" />
+      </div>
+      <div class="flex flex-col gap-1">
+        <label class="text-xs text-text3 font-mono uppercase tracking-wider">Return Date</label>
+        <input type="date" id="return-date" class="w-full bg-surface border border-border2 rounded-lg py-1.5 px-2.5 text-text font-sans text-xs outline-none transition-colors duration-150 focus:border-accent" />
+      </div>
     </div>
-    <div class="form-field">
-      <label>Return Date</label>
-      <input type="date" id="return-date" />
-    </div>
-    <div class="modal-actions">
-      <button class="btn-cancel" onclick="closeReturnModal()">Cancel</button>
-      <button class="btn-return" onclick="confirmReturn()">Confirm Return</button>
+    <div class="flex gap-2 justify-end mt-5">
+      <button class="py-2 px-3.5 bg-none border border-border2 rounded-lg text-text2 font-sans text-xs cursor-pointer" onclick="closeReturnModal()">Cancel</button>
+      <button class="py-2 px-3.5 bg-green border-none rounded-lg text-bg font-sans text-xs font-semibold cursor-pointer" onclick="confirmReturn()">Confirm Return</button>
     </div>
   </div>
 </div>
 
-<div class="toast" id="toast"></div>
+<div class="fixed bottom-6 left-1/2 -translate-x-1/2 translate-y-20 bg-surface2 border border-border2 text-text text-xs font-mono py-2.5 px-4.5 rounded-lg z-200 transition-transform duration-250 pointer-events-none" id="toast"></div>
 
 <script>
 // ── State ──────────────────────────────────────────────────────────────────
@@ -862,8 +524,8 @@ function today() { return new Date().toISOString().split('T')[0]; }
 function showToast(msg) {
   const t = document.getElementById('toast');
   t.textContent = msg;
-  t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 2200);
+  t.classList.add('translate-y-0');
+  setTimeout(() => t.classList.remove('translate-y-0'), 2200);
 }
 function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
 
@@ -941,7 +603,7 @@ async function signOut() {
 function renderContactList() {
   const list = document.getElementById('contact-list');
   if (!filteredContacts.length) {
-    list.innerHTML = '<div class="loading-contacts" style="color:var(--text3);font-size:12px">No contacts found</div>';
+    list.innerHTML = '<div class="flex flex-col items-center justify-center flex-1 gap-2.5 text-text3 text-xs">No contacts found</div>';
     return;
   }
   list.innerHTML = filteredContacts.map(c => {
@@ -949,13 +611,13 @@ function renderContactList() {
     const items = (inventory[c.id] || []);
     const outstanding = items.filter(i => (i.qty - (i.returned || 0)) > 0).length;
     const isActive = c.id === selectedContactId;
-    return `<div class="contact-item${isActive?' active':''}" onclick="selectContact('${c.id}')">
-      <div class="avatar" style="background:${bg};color:${fg}">${initials(c.name)}</div>
-      <div class="ci-info">
-        <div class="ci-name">${c.name}</div>
-        <div class="ci-sub">${c.email || c.phone || 'No contact info'}</div>
+    return `<div class="flex items-center gap-2.5 p-2.5 px-2.5 rounded-lg cursor-pointer transition-colors duration-120 relative${isActive?' bg-accent-dim':''}" onclick="selectContact('${c.id}')">
+      <div class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold flex-shrink-0 font-mono" style="background:${bg};color:${fg}">${initials(c.name)}</div>
+      <div class="flex-1 min-w-0">
+        <div class="text-xs font-medium whitespace-nowrap overflow-hidden text-ellipsis">${c.name}</div>
+        <div class="text-xs text-text2 whitespace-nowrap overflow-hidden text-ellipsis">${c.email || c.phone || 'No contact info'}</div>
       </div>
-      ${outstanding ? `<span class="ci-badge">${outstanding}</span>` : ''}
+      ${outstanding ? `<span class="text-xs font-mono py-0.5 px-1.5 rounded-full bg-accent-dim text-accent2 border border-accent/20 flex-shrink-0">${outstanding}</span>` : ''}
     </div>`;
   }).join('');
 }
@@ -999,10 +661,10 @@ function renderStats() {
   const totalReturned = items.reduce((s, i) => s + (i.returned || 0), 0);
   const balance = totalQtyOut - totalReturned;
   document.getElementById('stats-bar').innerHTML = `
-    <div class="stat-card"><div class="stat-label">items logged</div><div class="stat-value accent">${items.length}</div></div>
-    <div class="stat-card"><div class="stat-label">units given</div><div class="stat-value">${totalQtyOut}</div></div>
-    <div class="stat-card"><div class="stat-label">units returned</div><div class="stat-value green">${totalReturned}</div></div>
-    <div class="stat-card"><div class="stat-label">outstanding</div><div class="stat-value ${balance>0?'red':''}">${balance}</div></div>
+    <div class="bg-surface border border-border rounded-radius p-3 px-3.5"><div class="text-xs text-text3 font-mono uppercase tracking-wider mb-1">items logged</div><div class="text-xl font-semibold font-mono tracking-tight text-accent2">${items.length}</div></div>
+    <div class="bg-surface border border-border rounded-radius p-3 px-3.5"><div class="text-xs text-text3 font-mono uppercase tracking-wider mb-1">units given</div><div class="text-xl font-semibold font-mono tracking-tight">${totalQtyOut}</div></div>
+    <div class="bg-surface border border-border rounded-radius p-3 px-3.5"><div class="text-xs text-text3 font-mono uppercase tracking-wider mb-1">units returned</div><div class="text-xl font-semibold font-mono tracking-tight text-green">${totalReturned}</div></div>
+    <div class="bg-surface border border-border rounded-radius p-3 px-3.5"><div class="text-xs text-text3 font-mono uppercase tracking-wider mb-1">outstanding</div><div class="text-xl font-semibold font-mono tracking-tight ${balance>0?'text-red':''}">${balance}</div></div>
   `;
 }
 
@@ -1011,22 +673,22 @@ function renderItems() {
   const items = inventory[selectedContactId] || [];
   const wrap = document.getElementById('items-wrap');
   if (!items.length) {
-    wrap.innerHTML = `<div class="empty-state"><div class="eicon">📭</div><p>No items tracked yet — add one above</p></div>`;
+    wrap.innerHTML = `<div class="flex flex-col items-center justify-center h-48 gap-2 text-text3"><div class="text-2xl opacity-40">📭</div><p class="text-sm">No items tracked yet — add one above</p></div>`;
     return;
   }
   wrap.innerHTML = `
-    <div class="section-title">${items.length} item${items.length!==1?'s':''} tracked</div>
-    <table>
+    <div class="text-xs text-text3 font-mono uppercase tracking-wider mb-2.5">${items.length} item${items.length!==1?'s':''} tracked</div>
+    <table class="w-full border-collapse">
       <thead>
         <tr>
-          <th>Item</th>
-          <th style="text-align:right">Qty Out</th>
-          <th style="text-align:right">Returned</th>
-          <th style="text-align:right">Balance</th>
-          <th>Date Given</th>
-          <th>Status</th>
-          <th>Notes</th>
-          <th></th>
+          <th class="text-xs font-mono text-text3 uppercase tracking-wider text-left p-2.5 px-2.5 font-medium border-b border-border">Item</th>
+          <th class="text-xs font-mono text-text3 uppercase tracking-wider text-right p-2.5 px-2.5 font-medium border-b border-border">Qty Out</th>
+          <th class="text-xs font-mono text-text3 uppercase tracking-wider text-right p-2.5 px-2.5 font-medium border-b border-border">Returned</th>
+          <th class="text-xs font-mono text-text3 uppercase tracking-wider text-right p-2.5 px-2.5 font-medium border-b border-border">Balance</th>
+          <th class="text-xs font-mono text-text3 uppercase tracking-wider text-left p-2.5 px-2.5 font-medium border-b border-border">Date Given</th>
+          <th class="text-xs font-mono text-text3 uppercase tracking-wider text-center p-2.5 px-2.5 font-medium border-b border-border">Status</th>
+          <th class="text-xs font-mono text-text3 uppercase tracking-wider text-left p-2.5 px-2.5 font-medium border-b border-border">Notes</th>
+          <th class="text-xs font-mono text-text3 uppercase tracking-wider text-right p-2.5 px-2.5 font-medium border-b border-border"></th>
         </tr>
       </thead>
       <tbody>
@@ -1034,20 +696,20 @@ function renderItems() {
           const ret = item.returned || 0;
           const bal = item.qty - ret;
           let statusHtml;
-          if (bal <= 0) statusHtml = `<span class="pill pill-returned">returned</span>`;
-          else if (ret > 0) statusHtml = `<span class="pill pill-partial">partial</span>`;
-          else statusHtml = `<span class="pill pill-out">out</span>`;
-          return `<tr>
-            <td class="item-name-cell">${item.name}</td>
-            <td class="qty-cell">${item.qty}</td>
-            <td class="qty-cell" style="color:var(--green)">${ret}</td>
-            <td class="qty-cell" style="color:${bal>0?'var(--red)':'var(--text2)'}">${bal}</td>
-            <td class="date-cell">${item.date}</td>
-            <td class="status-cell">${statusHtml}</td>
-            <td class="notes-cell">${item.notes||'—'}</td>
-            <td class="actions-cell">
-              ${bal > 0 ? `<button class="row-btn ret" onclick="openReturnModal('${item.id}')">↩ return</button>` : ''}
-              <button class="row-btn del" onclick="deleteItem('${item.id}')">✕</button>
+          if (bal <= 0) statusHtml = `<span class="inline-block text-xs font-mono py-0.75 px-2 rounded-full font-medium bg-green-dim text-green border border-green/20">returned</span>`;
+          else if (ret > 0) statusHtml = `<span class="inline-block text-xs font-mono py-0.75 px-2 rounded-full font-medium bg-amber-dim text-amber border border-amber/20">partial</span>`;
+          else statusHtml = `<span class="inline-block text-xs font-mono py-0.75 px-2 rounded-full font-medium bg-accent-dim text-accent2 border border-accent/20">out</span>`;
+          return `<tr class="border-b border-border transition-colors duration-100 hover:bg-surface last:border-b-0">
+            <td class="p-2.5 text-xs align-middle font-medium">${item.name}</td>
+            <td class="p-2.5 text-xs align-middle font-mono text-right">${item.qty}</td>
+            <td class="p-2.5 text-xs align-middle font-mono text-right text-green">${ret}</td>
+            <td class="p-2.5 text-xs align-middle font-mono text-right" style="color:${bal>0?'var(--red)':'var(--text2)'}">${bal}</td>
+            <td class="p-2.5 text-xs align-middle font-mono text-text2 text-xs">${item.date}</td>
+            <td class="p-2.5 text-xs align-middle text-center">${statusHtml}</td>
+            <td class="p-2.5 text-xs align-middle text-text2 max-w-50">${item.notes||'—'}</td>
+            <td class="p-2.5 text-xs align-middle text-right">
+              ${bal > 0 ? `<button class="bg-none border-none cursor-pointer text-xs font-mono py-1 px-2 rounded-md transition-colors duration-120 text-text3 hover:text-green hover:bg-green-dim" onclick="openReturnModal('${item.id}')">↩ return</button>` : ''}
+              <button class="bg-none border-none cursor-pointer text-xs font-mono py-1 px-2 rounded-md transition-colors duration-120 text-text3 hover:text-red hover:bg-red-dim" onclick="deleteItem('${item.id}')">✕</button>
             </td>
           </tr>`;
         }).join('')}
@@ -1095,10 +757,12 @@ function openReturnModal(itemId) {
   document.getElementById('return-qty').value = bal;
   document.getElementById('return-qty').max = bal;
   document.getElementById('return-date').value = today();
-  document.getElementById('return-modal').classList.add('open');
+  document.getElementById('return-modal').classList.remove('hidden');
+  document.getElementById('return-modal').classList.add('flex');
 }
 function closeReturnModal() {
-  document.getElementById('return-modal').classList.remove('open');
+  document.getElementById('return-modal').classList.add('hidden');
+  document.getElementById('return-modal').classList.remove('flex');
   returnTarget = null;
 }
 async function confirmReturn() {
