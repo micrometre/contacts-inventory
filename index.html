@@ -1,0 +1,1239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Inventory Tracker</title>
+<style>
+  :root {
+    --bg: #0f0f11;
+    --surface: #18181c;
+    --surface2: #222228;
+    --surface3: #2a2a32;
+    --border: rgba(255,255,255,0.07);
+    --border2: rgba(255,255,255,0.12);
+    --accent: #7c6af7;
+    --accent2: #a594fa;
+    --accent-dim: rgba(124,106,247,0.15);
+    --green: #3ecf8e;
+    --green-dim: rgba(62,207,142,0.12);
+    --red: #f97171;
+    --red-dim: rgba(249,113,113,0.12);
+    --amber: #f5a623;
+    --amber-dim: rgba(245,166,35,0.12);
+    --text: #e8e8f0;
+    --text2: #8888a0;
+    --text3: #555568;
+    --radius: 10px;
+    --radius-lg: 16px;
+    --mono: 'DM Mono', monospace;
+    --sans: 'DM Sans', sans-serif;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+
+  body {
+    font-family: var(--sans);
+    background: var(--bg);
+    color: var(--text);
+    font-size: 14px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+
+
+  /* ── App shell ── */
+  #app { display: block; height: 100vh; overflow: hidden; }
+  .layout { display: grid; grid-template-columns: 260px 1fr; height: 100%; }
+
+  /* ── Sidebar ── */
+  .sidebar {
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .sidebar-top {
+    padding: 20px 16px 12px;
+    border-bottom: 1px solid var(--border);
+  }
+  .sidebar-brand {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+  .sidebar-brand .icon {
+    width: 28px; height: 28px;
+    background: var(--accent-dim);
+    border: 1px solid rgba(124,106,247,0.25);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px;
+  }
+  .sidebar-brand span {
+    font-size: 13px; font-weight: 600;
+    letter-spacing: -0.2px;
+    color: var(--text);
+  }
+  .search-box {
+    position: relative;
+  }
+  .search-box input {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 10px 8px 30px;
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 12px;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  .search-box input:focus { border-color: var(--accent); }
+  .search-box input::placeholder { color: var(--text3); }
+  .search-box .sicon {
+    position: absolute; left: 9px; top: 50%; transform: translateY(-50%);
+    color: var(--text3); font-size: 12px; pointer-events: none;
+  }
+  .contact-list { flex: 1; overflow-y: auto; padding: 8px; }
+  .contact-list::-webkit-scrollbar { width: 4px; }
+  .contact-list::-webkit-scrollbar-track { background: transparent; }
+  .contact-list::-webkit-scrollbar-thumb { background: var(--surface3); border-radius: 4px; }
+
+  .contact-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 10px; border-radius: 8px;
+    cursor: pointer; transition: background 0.12s;
+    position: relative;
+  }
+  .contact-item:hover { background: var(--surface2); }
+  .contact-item.active { background: var(--accent-dim); }
+  .contact-item.active::before {
+    content: '';
+    position: absolute; left: 0; top: 20%; bottom: 20%;
+    width: 2px; background: var(--accent);
+    border-radius: 2px;
+  }
+  .avatar {
+    width: 32px; height: 32px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 600; flex-shrink: 0;
+    font-family: var(--mono);
+  }
+  .ci-info { flex: 1; min-width: 0; }
+  .ci-name { font-size: 12px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .ci-sub { font-size: 11px; color: var(--text2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .ci-badge {
+    font-size: 10px; font-family: var(--mono);
+    padding: 2px 6px; border-radius: 10px;
+    background: var(--accent-dim); color: var(--accent2);
+    border: 1px solid rgba(124,106,247,0.2);
+    flex-shrink: 0;
+  }
+
+  .sidebar-footer {
+    padding: 12px 16px;
+    border-top: 1px solid var(--border);
+  }
+  .user-row {
+    display: flex; align-items: center; gap: 8px;
+  }
+  .user-info { flex: 1; min-width: 0; }
+  .user-name { font-size: 11px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .user-email { font-size: 10px; color: var(--text2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .sign-out-btn {
+    background: none; border: 1px solid var(--border2); border-radius: 6px;
+    color: var(--text2); font-size: 10px; font-family: var(--mono);
+    padding: 4px 8px; cursor: pointer; white-space: nowrap;
+    transition: color 0.12s, border-color 0.12s;
+  }
+  .sign-out-btn:hover { color: var(--red); border-color: var(--red); }
+
+  /* ── Main panel ── */
+  .main-panel { display: flex; flex-direction: column; overflow: hidden; background: var(--bg); }
+
+  .main-header {
+    padding: 20px 28px 16px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 14px;
+    flex-shrink: 0;
+  }
+  .header-avatar { width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 600; font-family: var(--mono); flex-shrink: 0; }
+  .header-info { flex: 1; }
+  .header-name { font-size: 17px; font-weight: 600; letter-spacing: -0.3px; }
+  .header-sub { font-size: 12px; color: var(--text2); margin-top: 1px; }
+  .header-actions { display: flex; gap: 8px; }
+
+  .btn-icon {
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    border-radius: 8px;
+    padding: 7px 12px;
+    color: var(--text2);
+    font-size: 11px;
+    font-family: var(--mono);
+    cursor: pointer;
+    display: flex; align-items: center; gap: 5px;
+    transition: color 0.12s, border-color 0.12s, background 0.12s;
+    white-space: nowrap;
+  }
+  .btn-icon:hover { color: var(--text); border-color: var(--border2); background: var(--surface2); }
+  .btn-icon.export-btn:hover { color: var(--green); border-color: var(--green); }
+
+  /* ── Stats bar ── */
+  .stats-bar {
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    padding: 16px 28px; gap: 12px;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 12px 14px;
+  }
+  .stat-label { font-size: 10px; color: var(--text3); font-family: var(--mono); text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 4px; }
+  .stat-value { font-size: 20px; font-weight: 600; font-family: var(--mono); letter-spacing: -0.5px; }
+  .stat-value.green { color: var(--green); }
+  .stat-value.red { color: var(--red); }
+  .stat-value.accent { color: var(--accent2); }
+
+  /* ── Add item form ── */
+  .add-form {
+    padding: 14px 28px;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+    display: flex; gap: 8px; align-items: flex-end;
+  }
+  .form-field { display: flex; flex-direction: column; gap: 4px; }
+  .form-field label { font-size: 10px; color: var(--text3); font-family: var(--mono); text-transform: uppercase; letter-spacing: 0.07em; }
+  .form-field input, .form-field select, .form-field textarea {
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    border-radius: 8px;
+    padding: 7px 10px;
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 12px;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  .form-field input:focus, .form-field select:focus { border-color: var(--accent); }
+  .form-field select { background-color: var(--surface); cursor: pointer; }
+  .form-field option { background: var(--surface2); }
+  .ff-name { flex: 1; }
+  .ff-qty input { width: 64px; }
+  .ff-date input { width: 130px; }
+  .ff-notes input { width: 160px; }
+  .add-btn {
+    padding: 8px 16px;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-family: var(--sans);
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: opacity 0.15s;
+    height: 34px;
+    white-space: nowrap;
+    align-self: flex-end;
+  }
+  .add-btn:hover { opacity: 0.85; }
+
+  /* ── Items table ── */
+  .items-wrap { flex: 1; overflow-y: auto; padding: 16px 28px; }
+  .items-wrap::-webkit-scrollbar { width: 4px; }
+  .items-wrap::-webkit-scrollbar-track { background: transparent; }
+  .items-wrap::-webkit-scrollbar-thumb { background: var(--surface3); border-radius: 4px; }
+
+  .section-title {
+    font-size: 10px; color: var(--text3);
+    font-family: var(--mono); text-transform: uppercase; letter-spacing: 0.09em;
+    margin-bottom: 10px;
+  }
+
+  table { width: 100%; border-collapse: collapse; }
+  thead th {
+    font-size: 10px; font-family: var(--mono); color: var(--text3);
+    text-transform: uppercase; letter-spacing: 0.07em;
+    text-align: left; padding: 0 10px 8px; font-weight: 500;
+    border-bottom: 1px solid var(--border);
+  }
+  tbody tr { border-bottom: 1px solid var(--border); transition: background 0.1s; }
+  tbody tr:hover { background: var(--surface); }
+  tbody tr:last-child { border-bottom: none; }
+  tbody td { padding: 10px; font-size: 12px; vertical-align: middle; }
+  td.item-name-cell { font-weight: 500; }
+  td.qty-cell { font-family: var(--mono); text-align: right; }
+  td.date-cell { color: var(--text2); font-family: var(--mono); font-size: 11px; }
+  td.type-cell {}
+  td.notes-cell { color: var(--text2); max-width: 200px; }
+  td.status-cell { text-align: center; }
+  td.actions-cell { text-align: right; }
+
+  .pill {
+    display: inline-block; font-size: 10px; font-family: var(--mono);
+    padding: 3px 8px; border-radius: 20px; font-weight: 500;
+  }
+  .pill-out { background: var(--accent-dim); color: var(--accent2); border: 1px solid rgba(124,106,247,0.2); }
+  .pill-returned { background: var(--green-dim); color: var(--green); border: 1px solid rgba(62,207,142,0.2); }
+  .pill-partial { background: var(--amber-dim); color: var(--amber); border: 1px solid rgba(245,166,35,0.2); }
+
+  .row-btn {
+    background: none; border: none; cursor: pointer;
+    font-size: 11px; font-family: var(--mono);
+    padding: 4px 8px; border-radius: 6px;
+    transition: background 0.12s, color 0.12s;
+    color: var(--text3);
+  }
+  .row-btn:hover { background: var(--surface2); color: var(--text); }
+  .row-btn.ret { color: var(--text3); }
+  .row-btn.ret:hover { color: var(--green); background: var(--green-dim); }
+  .row-btn.del:hover { color: var(--red); background: var(--red-dim); }
+
+  /* ── Empty state ── */
+  .empty-state {
+    display: flex; flex-direction: column; align-items: center;
+    justify-content: center; height: 200px; gap: 8px;
+    color: var(--text3);
+  }
+  .empty-state .eicon { font-size: 28px; opacity: 0.4; }
+  .empty-state p { font-size: 13px; }
+
+  /* ── Dashboard (summary) ── */
+  #dashboard {
+    display: none; flex: 1; overflow-y: auto; padding: 24px 28px;
+  }
+  #dashboard h2 { font-size: 15px; font-weight: 600; margin-bottom: 20px; letter-spacing: -0.2px; }
+  .dash-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 24px; }
+  .dash-stat {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 16px;
+  }
+  .dash-stat .dl { font-size: 10px; color: var(--text3); font-family: var(--mono); text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 6px; }
+  .dash-stat .dv { font-size: 26px; font-weight: 600; font-family: var(--mono); letter-spacing: -0.5px; }
+  .dash-table-wrap { margin-top: 24px; }
+  .dash-table-title { font-size: 10px; color: var(--text3); font-family: var(--mono); text-transform: uppercase; letter-spacing: 0.09em; margin-bottom: 10px; }
+  .dash-table { width: 100%; border-collapse: collapse; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+  .dash-table thead th { font-size: 10px; font-family: var(--mono); color: var(--text3); text-transform: uppercase; letter-spacing: 0.07em; text-align: left; padding: 10px 14px; font-weight: 500; border-bottom: 1px solid var(--border); }
+  .dash-table tbody tr { border-bottom: 1px solid var(--border); }
+  .dash-table tbody tr:last-child { border-bottom: none; }
+  .dash-table tbody td { padding: 10px 14px; font-size: 12px; }
+  .dash-table .nav-link { color: var(--accent2); cursor: pointer; text-decoration: none; font-weight: 500; }
+  .dash-table .nav-link:hover { text-decoration: underline; }
+
+  /* ── Nav tabs ── */
+  .nav-tabs { display: flex; gap: 2px; padding: 4px; background: var(--surface); border-radius: 9px; border: 1px solid var(--border); }
+  .nav-tab {
+    padding: 5px 12px; border-radius: 7px; font-size: 11px; font-family: var(--mono);
+    cursor: pointer; color: var(--text2); border: none; background: none;
+    transition: color 0.12s, background 0.12s;
+  }
+  .nav-tab:hover { color: var(--text); }
+  .nav-tab.active { background: var(--surface3); color: var(--text); }
+
+  /* ── Return modal ── */
+  .modal-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.7);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 100; display: none;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--surface); border: 1px solid var(--border2);
+    border-radius: var(--radius-lg); padding: 28px; width: 360px;
+  }
+  .modal h3 { font-size: 15px; font-weight: 600; margin-bottom: 6px; }
+  .modal p { font-size: 12px; color: var(--text2); margin-bottom: 20px; }
+  .modal .form-field { margin-bottom: 14px; }
+  .modal .form-field input { width: 100%; }
+  .modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 20px; }
+  .btn-cancel {
+    padding: 8px 14px; background: none; border: 1px solid var(--border2);
+    border-radius: 8px; color: var(--text2); font-family: var(--sans); font-size: 12px;
+    cursor: pointer;
+  }
+  .btn-return {
+    padding: 8px 14px; background: var(--green); border: none;
+    border-radius: 8px; color: #0f0f11; font-family: var(--sans); font-size: 12px;
+    font-weight: 600; cursor: pointer;
+  }
+
+  .toast {
+    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px);
+    background: var(--surface2); border: 1px solid var(--border2);
+    color: var(--text); font-size: 12px; font-family: var(--mono);
+    padding: 10px 18px; border-radius: 8px; z-index: 200;
+    transition: transform 0.25s ease;
+    pointer-events: none;
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+
+  .loading-contacts {
+    flex: 1; display: flex; align-items: center; justify-content: center;
+    flex-direction: column; gap: 10px; color: var(--text3); font-size: 13px;
+  }
+  .spinner {
+    width: 20px; height: 20px; border: 2px solid var(--surface3);
+    border-top-color: var(--accent); border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .no-selection {
+    flex: 1; display: flex; align-items: center; justify-content: center;
+    flex-direction: column; gap: 10px; color: var(--text3);
+  }
+  .no-selection .ns-icon { font-size: 36px; opacity: 0.2; }
+  .no-selection p { font-size: 13px; }
+</style>
+<script src="/sqlite3.js"></script>
+<script src="/sqlite3-worker1-promiser.js"></script>
+</head>
+<body>
+
+<!-- APP -->
+<div id="app">
+  <div class="layout">
+
+    <!-- SIDEBAR -->
+    <div class="sidebar">
+      <div class="sidebar-top">
+        <div class="sidebar-brand">
+          <div class="icon">📦</div>
+          <span>Inventory</span>
+          <div style="margin-left:auto">
+            <div class="nav-tabs">
+              <button class="nav-tab active" onclick="switchView('contacts')" id="tab-contacts">contacts</button>
+              <button class="nav-tab" onclick="switchView('dashboard')" id="tab-dash">summary</button>
+            </div>
+          </div>
+        </div>
+        <div class="search-box">
+          <span class="sicon">⌕</span>
+          <input type="text" placeholder="Search contacts..." id="search-input" oninput="filterContacts()" />
+        </div>
+      </div>
+
+      <div class="contact-list" id="contact-list">
+        <div class="loading-contacts">
+          <div class="spinner"></div>
+          <span>Loading contacts…</span>
+        </div>
+      </div>
+
+      <div class="sidebar-footer">
+        <div class="user-row">
+          <div class="avatar" id="user-avatar" style="width:28px;height:28px;font-size:10px;background:var(--accent-dim);color:var(--accent2)">–</div>
+          <div class="user-info">
+            <div class="user-name" id="user-name">–</div>
+            <div class="user-email" id="user-email">–</div>
+          </div>
+          <button class="sign-out-btn" onclick="signOut()">sign out</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- MAIN PANEL -->
+    <div class="main-panel" id="main-panel">
+
+      <!-- No contact selected -->
+      <div class="no-selection" id="no-selection">
+        <div class="ns-icon">👤</div>
+        <p>Select a contact to manage their inventory</p>
+      </div>
+
+      <!-- Contact view -->
+      <div id="contact-view" style="display:none; flex-direction:column; height:100%; overflow:hidden;">
+
+        <div class="main-header">
+          <div class="header-avatar" id="h-avatar"></div>
+          <div class="header-info">
+            <div class="header-name" id="h-name"></div>
+            <div class="header-sub" id="h-sub"></div>
+          </div>
+          <div class="header-actions">
+            <button class="btn-icon export-btn" onclick="exportContact()">↓ export CSV</button>
+          </div>
+        </div>
+
+        <div class="stats-bar" id="stats-bar"></div>
+
+        <div class="add-form">
+          <div class="form-field ff-name">
+            <label>Item Name</label>
+            <input type="text" id="f-name" placeholder="e.g. Laptop, Power drill…" />
+          </div>
+          <div class="form-field ff-qty">
+            <label>Qty</label>
+            <input type="number" id="f-qty" min="1" value="1" />
+          </div>
+          <div class="form-field ff-date">
+            <label>Date Given</label>
+            <input type="date" id="f-date" />
+          </div>
+          <div class="form-field ff-notes">
+            <label>Notes</label>
+            <input type="text" id="f-notes" placeholder="Optional notes…" />
+          </div>
+          <button class="add-btn" onclick="addItem()">+ Add Item</button>
+        </div>
+
+        <div class="items-wrap" id="items-wrap">
+          <div class="empty-state">
+            <div class="eicon">📭</div>
+            <p>No items tracked yet</p>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Dashboard -->
+      <div id="dashboard">
+        <h2>Summary — all contacts</h2>
+        <div class="dash-grid" id="dash-grid"></div>
+        <div class="dash-table-wrap">
+          <div class="dash-table-title">Top contacts by inventory</div>
+          <table class="dash-table" id="dash-table">
+            <thead>
+              <tr>
+                <th>Contact</th>
+                <th>Items given</th>
+                <th>Units out</th>
+                <th>Units returned</th>
+                <th>Balance</th>
+              </tr>
+            </thead>
+            <tbody id="dash-tbody"></tbody>
+          </table>
+        </div>
+        <div class="dash-table-wrap" style="margin-top:28px">
+          <div class="dash-table-title">All items given out</div>
+          <table class="dash-table" id="all-items-table">
+            <thead>
+              <tr><th>Contact</th><th>Item</th><th>Qty</th><th>Date</th><th>Status</th><th>Notes</th></tr>
+            </thead>
+            <tbody id="all-items-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- Return modal -->
+<div class="modal-overlay" id="return-modal">
+  <div class="modal">
+    <h3>Mark as returned</h3>
+    <p id="return-modal-desc">How many units were returned?</p>
+    <div class="form-field">
+      <label>Qty Returned</label>
+      <input type="number" id="return-qty" min="1" value="1" />
+    </div>
+    <div class="form-field">
+      <label>Return Date</label>
+      <input type="date" id="return-date" />
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeReturnModal()">Cancel</button>
+      <button class="btn-return" onclick="confirmReturn()">Confirm Return</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── State ──────────────────────────────────────────────────────────────────
+let contacts = [];
+let filteredContacts = [];
+let selectedContactId = null;
+let inventory = {}; // { contactId: [ {id, name, qty, date, notes, returned, returnDate} ] }
+let currentView = 'contacts';
+let returnTarget = null;
+let userInfo = { name: '', email: '' };
+
+// ── SQLite Database ──────────────────────────────────────────────────────────
+class SQLiteDB {
+  constructor() {
+    this.promiser = null;
+    this.dbId = null;
+    this.initialized = false;
+    this.fallbackMode = false;
+  }
+
+  async init() {
+    if (this.initialized) return;
+
+    try {
+      // Try to initialize SQLite
+      if (typeof sqlite3Worker1Promiser !== 'undefined') {
+        this.promiser = await new Promise((resolve) => {
+          const _promiser = sqlite3Worker1Promiser({
+            onready: () => resolve(_promiser),
+          });
+        });
+
+        const response = await this.promiser('open', {
+          filename: 'file:contacts-inventory.sqlite3?vfs=opfs',
+        });
+        this.dbId = response.dbId;
+
+        await this.exec(`
+          CREATE TABLE IF NOT EXISTS contacts (
+            id TEXT PRIMARY KEY,
+            name TEXT,
+            email TEXT,
+            phone TEXT
+          )
+        `);
+
+        await this.exec(`
+          CREATE TABLE IF NOT EXISTS inventory (
+            id TEXT PRIMARY KEY,
+            contactId TEXT,
+            name TEXT,
+            qty INTEGER,
+            date TEXT,
+            notes TEXT,
+            returned INTEGER,
+            returnDate TEXT,
+            FOREIGN KEY (contactId) REFERENCES contacts(id) ON DELETE CASCADE
+          )
+        `);
+
+        await this.exec(`
+          CREATE TABLE IF NOT EXISTS user_info (
+            key TEXT PRIMARY KEY,
+            name TEXT,
+            email TEXT
+          )
+        `);
+
+        this.initialized = true;
+        console.log('SQLite initialized successfully');
+      } else {
+        throw new Error('SQLite WASM not available');
+      }
+    } catch (e) {
+      console.warn('SQLite initialization failed, using localStorage fallback:', e);
+      this.fallbackMode = true;
+      this.initialized = true;
+    }
+  }
+
+  async exec(sql, bind = []) {
+    if (this.fallbackMode) {
+      return this.execFallback(sql, bind);
+    }
+    
+    const results = [];
+    await this.promiser('exec', {
+      dbId: this.dbId,
+      sql,
+      bind,
+      rowMode: 'object',
+      callback: (result) => {
+        if (result.row) {
+          results.push(result.row);
+        }
+      },
+    });
+    return results;
+  }
+
+  execFallback(sql, bind = []) {
+    // Simple localStorage fallback for basic operations
+    const data = JSON.parse(localStorage.getItem('inv_tracker_fallback') || '{}');
+    
+    if (sql.includes('SELECT COUNT(*) as count FROM contacts')) {
+      return [{ count: (data.contacts || []).length }];
+    }
+    
+    if (sql.includes('SELECT * FROM contacts')) {
+      return data.contacts || [];
+    }
+    
+    if (sql.includes('SELECT * FROM inventory')) {
+      const items = data.inventory || [];
+      return items.sort((a, b) => (b.rowid || 0) - (a.rowid || 0));
+    }
+    
+    if (sql.includes("SELECT * FROM user_info WHERE key='default'")) {
+      return data.userInfo ? [{ name: data.userInfo.name, email: data.userInfo.email }] : [];
+    }
+    
+    if (sql.includes('INSERT OR REPLACE INTO contacts')) {
+      if (!data.contacts) data.contacts = [];
+      const existingIndex = data.contacts.findIndex(c => c.id === bind[0]);
+      const contact = { id: bind[0], name: bind[1], email: bind[2], phone: bind[3] };
+      if (existingIndex >= 0) {
+        data.contacts[existingIndex] = contact;
+      } else {
+        data.contacts.push(contact);
+      }
+      localStorage.setItem('inv_tracker_fallback', JSON.stringify(data));
+      return [];
+    }
+    
+    if (sql.includes('INSERT INTO inventory')) {
+      if (!data.inventory) data.inventory = [];
+      const item = {
+        id: bind[0], contactId: bind[1], name: bind[2], qty: bind[3],
+        date: bind[4], notes: bind[5], returned: bind[6], returnDate: bind[7],
+        rowid: Date.now()
+      };
+      data.inventory.push(item);
+      localStorage.setItem('inv_tracker_fallback', JSON.stringify(data));
+      return [];
+    }
+    
+    if (sql.includes('DELETE FROM inventory WHERE id=?')) {
+      if (data.inventory) {
+        data.inventory = data.inventory.filter(i => i.id !== bind[0]);
+        localStorage.setItem('inv_tracker_fallback', JSON.stringify(data));
+      }
+      return [];
+    }
+    
+    if (sql.includes('UPDATE inventory SET returned=?, returnDate=? WHERE id=?')) {
+      if (data.inventory) {
+        const item = data.inventory.find(i => i.id === bind[2]);
+        if (item) {
+          item.returned = bind[0];
+          item.returnDate = bind[1];
+          localStorage.setItem('inv_tracker_fallback', JSON.stringify(data));
+        }
+      }
+      return [];
+    }
+    
+    if (sql.includes('DELETE FROM inventory')) {
+      data.inventory = [];
+      localStorage.setItem('inv_tracker_fallback', JSON.stringify(data));
+      return [];
+    }
+    
+    if (sql.includes('DELETE FROM contacts')) {
+      data.contacts = [];
+      localStorage.setItem('inv_tracker_fallback', JSON.stringify(data));
+      return [];
+    }
+    
+    if (sql.includes('DELETE FROM user_info')) {
+      delete data.userInfo;
+      localStorage.setItem('inv_tracker_fallback', JSON.stringify(data));
+      return [];
+    }
+    
+    return [];
+  }
+
+  // --- CRUD Operations ---
+
+  async getContacts() {
+    return await this.exec('SELECT * FROM contacts');
+  }
+
+  async getInventoryMap() {
+    const items = await this.exec('SELECT * FROM inventory ORDER BY rowid DESC');
+    const map = {};
+    for (const item of items) {
+      if (!map[item.contactId]) map[item.contactId] = [];
+      map[item.contactId].push(item);
+    }
+    return map;
+  }
+
+  async getUserInfo() {
+    const res = await this.exec("SELECT * FROM user_info WHERE key='default'");
+    if (res.length > 0) return { name: res[0].name, email: res[0].email };
+    return { name: '', email: '' };
+  }
+
+  async saveUserInfo(info) {
+    if (this.fallbackMode) {
+      const data = JSON.parse(localStorage.getItem('inv_tracker_fallback') || '{}');
+      data.userInfo = info;
+      localStorage.setItem('inv_tracker_fallback', JSON.stringify(data));
+      return;
+    }
+    
+    await this.exec(
+      'INSERT INTO user_info (key, name, email) VALUES (?, ?, ?) ON CONFLICT(key) DO UPDATE SET name=excluded.name, email=excluded.email',
+      ['default', info.name || '', info.email || '']
+    );
+  }
+
+  async saveContact(c) {
+    await this.exec(
+      'INSERT OR REPLACE INTO contacts (id, name, email, phone) VALUES (?, ?, ?, ?)',
+      [c.id, c.name, c.email || '', c.phone || '']
+    );
+  }
+
+  async saveMultipleContacts(contacts) {
+    for (const c of contacts) {
+      await this.saveContact(c);
+    }
+  }
+
+  async addInventoryItem(item) {
+    await this.exec(
+      'INSERT INTO inventory (id, contactId, name, qty, date, notes, returned, returnDate) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+      [
+        item.id,
+        item.contactId,
+        item.name,
+        item.qty,
+        item.date || '',
+        item.notes || '',
+        item.returned || 0,
+        item.returnDate || '',
+      ]
+    );
+  }
+
+  async deleteInventoryItem(id) {
+    await this.exec('DELETE FROM inventory WHERE id=?', [id]);
+  }
+
+  async returnInventoryItem(id, returned, returnDate) {
+    await this.exec(
+      'UPDATE inventory SET returned=?, returnDate=? WHERE id=?',
+      [returned, returnDate, id]
+    );
+  }
+
+  async clearDatabase() {
+    await this.exec('DELETE FROM inventory');
+    await this.exec('DELETE FROM contacts');
+    await this.exec('DELETE FROM user_info');
+  }
+
+  async isEmpty() {
+    const contactsCount = await this.exec('SELECT COUNT(*) as count FROM contacts');
+    return contactsCount[0].count === 0;
+  }
+}
+
+const db = new SQLiteDB();
+
+// ── Persist ────────────────────────────────────────────────────────────────
+async function save() {
+  try {
+    await db.saveUserInfo(userInfo);
+    for (const contact of contacts) {
+      await db.saveContact(contact);
+    }
+  } catch (e) {
+    console.error('Save failed:', e);
+  }
+}
+async function load() {
+  try {
+    contacts = await db.getContacts();
+    inventory = await db.getInventoryMap();
+    userInfo = await db.getUserInfo();
+  } catch(e) {
+    console.error('Load failed:', e);
+  }
+}
+
+// ── Helpers ────────────────────────────────────────────────────────────────
+function colorFor(name) {
+  let h = 0;
+  for (const c of (name || '?')) h = (h * 31 + c.charCodeAt(0)) % COLORS.length;
+  return COLORS[h];
+}
+function initials(name) {
+  return (name || '?').split(' ').map(p => p[0]).slice(0,2).join('').toUpperCase();
+}
+function fmt(n) { return n.toLocaleString(); }
+function today() { return new Date().toISOString().split('T')[0]; }
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2200);
+}
+function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
+
+const COLORS = [
+  ['#1e1a40','#a594fa'], ['#0f2a1e','#3ecf8e'], ['#2a1515','#f97171'],
+  ['#1a1a0a','#f5a623'], ['#0d1e2d','#60b2f7'], ['#1e0d28','#d08af7']
+];
+
+// ── App Initialization ────────────────────────────────────────────────────────
+async function initApp() {
+  await db.init();
+  const isEmpty = await db.isEmpty();
+  if (isEmpty) {
+    await loadDemo();
+  } else {
+    await load();
+  }
+  showApp();
+}
+
+// ── Demo data ──────────────────────────────────────────────────────────────
+async function loadDemo() {
+  contacts = [
+    { id: 'demo1', name: 'Alice Johnson', email: 'alice@example.com', phone: '' },
+    { id: 'demo2', name: 'Bob Martinez', email: 'bob@example.com', phone: '' },
+    { id: 'demo3', name: 'Clara Nguyen', email: 'clara@example.com', phone: '' },
+    { id: 'demo4', name: 'David Park', email: 'david@example.com', phone: '' },
+    { id: 'demo5', name: 'Emma Wilson', email: 'emma@example.com', phone: '' },
+  ];
+  
+  // Save contacts to database
+  await db.saveMultipleContacts(contacts);
+  
+  // Clear existing inventory and add new items
+  await db.exec('DELETE FROM inventory');
+  
+  const demoInventory = [
+    { id: uid(), contactId: 'demo1', name: 'Mobile Phone', qty: 1, date: '2025-09-12', notes: 'Personal smartphone', returned: 0, returnDate: '' },
+    { id: uid(), contactId: 'demo2', name: 'Mobile Phone', qty: 1, date: '2025-08-20', notes: 'Personal smartphone', returned: 0, returnDate: '' },
+    { id: uid(), contactId: 'demo3', name: 'Mobile Phone', qty: 1, date: '2025-07-15', notes: 'Personal smartphone', returned: 0, returnDate: '' },
+    { id: uid(), contactId: 'demo4', name: 'Mobile Phone', qty: 1, date: '2025-07-05', notes: 'Personal smartphone', returned: 0, returnDate: '' },
+    { id: uid(), contactId: 'demo5', name: 'Mobile Phone', qty: 1, date: '2025-06-20', notes: 'Personal smartphone', returned: 0, returnDate: '' },
+  ];
+  
+  for (const item of demoInventory) {
+    await db.addInventoryItem(item);
+  }
+  
+  userInfo = { name: 'Demo User', email: 'demo@example.com' };
+  await db.saveUserInfo(userInfo);
+  
+  // Load data back into memory
+  contacts = await db.getContacts();
+  inventory = await db.getInventoryMap();
+}
+
+// ── App ────────────────────────────────────────────────────────────────────
+function showApp() {
+  document.getElementById('user-name').textContent = userInfo.name || 'User';
+  document.getElementById('user-email').textContent = userInfo.email || '';
+  const [bg, fg] = colorFor(userInfo.name);
+  const ua = document.getElementById('user-avatar');
+  ua.style.background = bg; ua.style.color = fg;
+  ua.textContent = initials(userInfo.name);
+  filteredContacts = [...contacts];
+  renderContactList();
+}
+
+async function signOut() {
+  await db.clearDatabase();
+  window.location.reload();
+}
+
+// ── Contact list ───────────────────────────────────────────────────────────
+function renderContactList() {
+  const list = document.getElementById('contact-list');
+  if (!filteredContacts.length) {
+    list.innerHTML = '<div class="loading-contacts" style="color:var(--text3);font-size:12px">No contacts found</div>';
+    return;
+  }
+  list.innerHTML = filteredContacts.map(c => {
+    const [bg, fg] = colorFor(c.name);
+    const items = (inventory[c.id] || []);
+    const outstanding = items.filter(i => (i.qty - (i.returned || 0)) > 0).length;
+    const isActive = c.id === selectedContactId;
+    return `<div class="contact-item${isActive?' active':''}" onclick="selectContact('${c.id}')">
+      <div class="avatar" style="background:${bg};color:${fg}">${initials(c.name)}</div>
+      <div class="ci-info">
+        <div class="ci-name">${c.name}</div>
+        <div class="ci-sub">${c.email || c.phone || 'No contact info'}</div>
+      </div>
+      ${outstanding ? `<span class="ci-badge">${outstanding}</span>` : ''}
+    </div>`;
+  }).join('');
+}
+
+function filterContacts() {
+  const q = document.getElementById('search-input').value.toLowerCase();
+  filteredContacts = contacts.filter(c =>
+    c.name.toLowerCase().includes(q) || (c.email||'').toLowerCase().includes(q)
+  );
+  renderContactList();
+}
+
+// ── Select contact ─────────────────────────────────────────────────────────
+function selectContact(id) {
+  selectedContactId = id;
+  const c = contacts.find(x => x.id === id);
+  if (!c) return;
+
+  document.getElementById('no-selection').style.display = 'none';
+  document.getElementById('dashboard').style.display = 'none';
+  const cv = document.getElementById('contact-view');
+  cv.style.display = 'flex';
+
+  const [bg, fg] = colorFor(c.name);
+  const ha = document.getElementById('h-avatar');
+  ha.style.background = bg; ha.style.color = fg;
+  ha.textContent = initials(c.name);
+  document.getElementById('h-name').textContent = c.name;
+  document.getElementById('h-sub').textContent = [c.email, c.phone].filter(Boolean).join(' · ') || 'No contact info';
+  document.getElementById('f-date').value = today();
+
+  renderStats();
+  renderItems();
+  renderContactList();
+}
+
+// ── Stats ──────────────────────────────────────────────────────────────────
+function renderStats() {
+  const items = inventory[selectedContactId] || [];
+  const totalQtyOut = items.reduce((s, i) => s + i.qty, 0);
+  const totalReturned = items.reduce((s, i) => s + (i.returned || 0), 0);
+  const balance = totalQtyOut - totalReturned;
+  document.getElementById('stats-bar').innerHTML = `
+    <div class="stat-card"><div class="stat-label">items logged</div><div class="stat-value accent">${items.length}</div></div>
+    <div class="stat-card"><div class="stat-label">units given</div><div class="stat-value">${totalQtyOut}</div></div>
+    <div class="stat-card"><div class="stat-label">units returned</div><div class="stat-value green">${totalReturned}</div></div>
+    <div class="stat-card"><div class="stat-label">outstanding</div><div class="stat-value ${balance>0?'red':''}">${balance}</div></div>
+  `;
+}
+
+// ── Items ──────────────────────────────────────────────────────────────────
+function renderItems() {
+  const items = inventory[selectedContactId] || [];
+  const wrap = document.getElementById('items-wrap');
+  if (!items.length) {
+    wrap.innerHTML = `<div class="empty-state"><div class="eicon">📭</div><p>No items tracked yet — add one above</p></div>`;
+    return;
+  }
+  wrap.innerHTML = `
+    <div class="section-title">${items.length} item${items.length!==1?'s':''} tracked</div>
+    <table>
+      <thead>
+        <tr>
+          <th>Item</th>
+          <th style="text-align:right">Qty Out</th>
+          <th style="text-align:right">Returned</th>
+          <th style="text-align:right">Balance</th>
+          <th>Date Given</th>
+          <th>Status</th>
+          <th>Notes</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        ${items.map(item => {
+          const ret = item.returned || 0;
+          const bal = item.qty - ret;
+          let statusHtml;
+          if (bal <= 0) statusHtml = `<span class="pill pill-returned">returned</span>`;
+          else if (ret > 0) statusHtml = `<span class="pill pill-partial">partial</span>`;
+          else statusHtml = `<span class="pill pill-out">out</span>`;
+          return `<tr>
+            <td class="item-name-cell">${item.name}</td>
+            <td class="qty-cell">${item.qty}</td>
+            <td class="qty-cell" style="color:var(--green)">${ret}</td>
+            <td class="qty-cell" style="color:${bal>0?'var(--red)':'var(--text2)'}">${bal}</td>
+            <td class="date-cell">${item.date}</td>
+            <td class="status-cell">${statusHtml}</td>
+            <td class="notes-cell">${item.notes||'—'}</td>
+            <td class="actions-cell">
+              ${bal > 0 ? `<button class="row-btn ret" onclick="openReturnModal('${item.id}')">↩ return</button>` : ''}
+              <button class="row-btn del" onclick="deleteItem('${item.id}')">✕</button>
+            </td>
+          </tr>`;
+        }).join('')}
+      </tbody>
+    </table>`;
+}
+
+// ── Add item ───────────────────────────────────────────────────────────────
+async function addItem() {
+  const name = document.getElementById('f-name').value.trim();
+  const qty = parseInt(document.getElementById('f-qty').value) || 1;
+  const date = document.getElementById('f-date').value || today();
+  const notes = document.getElementById('f-notes').value.trim();
+  if (!name) { showToast('Item name required'); return; }
+  const newItem = { id: uid(), name, qty, date, notes, returned: 0, returnDate: '' };
+  await db.addInventoryItem({ ...newItem, contactId: selectedContactId });
+  inventory[selectedContactId] = (inventory[selectedContactId] || []).concat(newItem);
+  renderStats();
+  renderItems();
+  renderContactList();
+  document.getElementById('f-name').value = '';
+  document.getElementById('f-qty').value = '1';
+  document.getElementById('f-notes').value = '';
+  showToast('Item added');
+}
+
+// ── Delete item ────────────────────────────────────────────────────────────
+async function deleteItem(itemId) {
+  if (!selectedContactId) return;
+  await db.deleteInventoryItem(itemId);
+  inventory[selectedContactId] = (inventory[selectedContactId] || []).filter(i => i.id !== itemId);
+  renderStats();
+  renderItems();
+  renderContactList();
+  showToast('Item deleted');
+}
+
+// ── Return modal ───────────────────────────────────────────────────────────
+function openReturnModal(itemId) {
+  const item = (inventory[selectedContactId] || []).find(i => i.id === itemId);
+  if (!item) return;
+  returnTarget = itemId;
+  const bal = item.qty - (item.returned || 0);
+  document.getElementById('return-modal-desc').textContent = `"${item.name}" — ${bal} unit${bal>1?'s':''} outstanding`;
+  document.getElementById('return-qty').value = bal;
+  document.getElementById('return-qty').max = bal;
+  document.getElementById('return-date').value = today();
+  document.getElementById('return-modal').classList.add('open');
+}
+function closeReturnModal() {
+  document.getElementById('return-modal').classList.remove('open');
+  returnTarget = null;
+}
+async function confirmReturn() {
+  const qty = parseInt(document.getElementById('return-qty').value) || 0;
+  const date = document.getElementById('return-date').value || today();
+  if (!returnTarget || !selectedContactId || qty <= 0) return;
+  const item = inventory[selectedContactId].find(i => i.id === returnTarget);
+  if (!item) return;
+  const newReturned = Math.min((item.returned || 0) + qty, item.qty);
+  await db.returnInventoryItem(returnTarget, newReturned, date);
+  item.returned = newReturned;
+  item.returnDate = date;
+  renderStats();
+  renderItems();
+  renderContactList();
+  closeReturnModal();
+  showToast(`${qty} unit${qty===1?'':'s'} returned`);
+}
+
+// ── Dashboard ──────────────────────────────────────────────────────────────
+function switchView(view) {
+  currentView = view;
+  document.getElementById('tab-contacts').classList.toggle('active', view === 'contacts');
+  document.getElementById('tab-dash').classList.toggle('active', view === 'dashboard');
+
+  if (view === 'dashboard') {
+    document.getElementById('contact-view').style.display = 'none';
+    document.getElementById('no-selection').style.display = 'none';
+    document.getElementById('dashboard').style.display = 'block';
+    renderDashboard();
+  } else {
+    document.getElementById('dashboard').style.display = 'none';
+    if (selectedContactId) {
+      document.getElementById('contact-view').style.display = 'flex';
+    } else {
+      document.getElementById('no-selection').style.display = 'flex';
+    }
+  }
+}
+
+function renderDashboard() {
+  let totalItems = 0, totalOut = 0, totalReturned = 0;
+  const rows = contacts.map(c => {
+    const items = inventory[c.id] || [];
+    const qtyOut = items.reduce((s,i) => s+i.qty, 0);
+    const qtyRet = items.reduce((s,i) => s+(i.returned||0), 0);
+    totalItems += items.length;
+    totalOut += qtyOut;
+    totalReturned += qtyRet;
+    return { c, items: items.length, qtyOut, qtyRet, bal: qtyOut - qtyRet };
+  }).filter(r => r.items > 0).sort((a,b) => b.bal - a.bal);
+
+  document.getElementById('dash-grid').innerHTML = `
+    <div class="dash-stat"><div class="dl">total contacts tracked</div><div class="dv" style="color:var(--accent2)">${rows.length}</div></div>
+    <div class="dash-stat"><div class="dl">total units given</div><div class="dv">${totalOut}</div></div>
+    <div class="dash-stat"><div class="dl">units returned</div><div class="dv" style="color:var(--green)">${totalReturned}</div></div>
+    <div class="dash-stat"><div class="dl">outstanding balance</div><div class="dv" style="color:${totalOut-totalReturned>0?'var(--red)':'var(--text)'}">${totalOut-totalReturned}</div></div>
+    <div class="dash-stat"><div class="dl">total line items</div><div class="dv">${totalItems}</div></div>
+    <div class="dash-stat"><div class="dl">return rate</div><div class="dv" style="color:var(--amber)">${totalOut>0?Math.round(totalReturned/totalOut*100):0}%</div></div>
+  `;
+
+  document.getElementById('dash-tbody').innerHTML = rows.length ? rows.map(r => {
+    const [bg, fg] = colorFor(r.c.name);
+    return `<tr>
+      <td><a class="nav-link" onclick="goToContact('${r.c.id}')">${r.c.name}</a></td>
+      <td style="font-family:var(--mono)">${r.items}</td>
+      <td style="font-family:var(--mono)">${r.qtyOut}</td>
+      <td style="font-family:var(--mono);color:var(--green)">${r.qtyRet}</td>
+      <td style="font-family:var(--mono);color:${r.bal>0?'var(--red)':'var(--text2)'}">${r.bal}</td>
+    </tr>`;
+  }).join('') : `<tr><td colspan="5" style="text-align:center;color:var(--text3);padding:24px;font-size:12px">No inventory tracked yet</td></tr>`;
+
+  const allItems = [];
+  contacts.forEach(c => {
+    (inventory[c.id] || []).forEach(item => allItems.push({ ...item, contactName: c.name, contactId: c.id }));
+  });
+  allItems.sort((a,b) => (b.date||'').localeCompare(a.date||''));
+  const bal = i => i.qty - (i.returned||0);
+  document.getElementById('all-items-tbody').innerHTML = allItems.length ? allItems.map(item => {
+    const b = bal(item);
+    let s;
+    if (b <= 0) s = `<span class="pill pill-returned">returned</span>`;
+    else if ((item.returned||0) > 0) s = `<span class="pill pill-partial">partial</span>`;
+    else s = `<span class="pill pill-out">out</span>`;
+    return `<tr>
+      <td><a class="nav-link" onclick="goToContact('${item.contactId}')">${item.contactName}</a></td>
+      <td style="font-weight:500">${item.name}</td>
+      <td style="font-family:var(--mono)">${item.qty}</td>
+      <td style="font-family:var(--mono);font-size:11px;color:var(--text2)">${item.date}</td>
+      <td>${s}</td>
+      <td style="color:var(--text2)">${item.notes||'—'}</td>
+    </tr>`;
+  }).join('') : `<tr><td colspan="6" style="text-align:center;color:var(--text3);padding:24px;font-size:12px">No items tracked yet</td></tr>`;
+}
+
+function goToContact(id) {
+  switchView('contacts');
+  selectContact(id);
+}
+
+// ── Export CSV ─────────────────────────────────────────────────────────────
+function exportContact() {
+  const c = contacts.find(x => x.id === selectedContactId);
+  if (!c) return;
+  const items = inventory[selectedContactId] || [];
+  const rows = [['Contact','Item','Qty Given','Qty Returned','Balance','Date Given','Return Date','Status','Notes']];
+  items.forEach(item => {
+    const ret = item.returned || 0;
+    const bal = item.qty - ret;
+    let status = bal <= 0 ? 'Returned' : ret > 0 ? 'Partial' : 'Out';
+    rows.push([c.name, item.name, item.qty, ret, bal, item.date, item.returnDate||'', status, item.notes||'']);
+  });
+  downloadCSV(rows, `inventory-${c.name.replace(/\s+/g,'-')}.csv`);
+}
+
+function downloadCSV(rows, filename) {
+  const csv = rows.map(r => r.map(v => `"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  a.click();
+  showToast('CSV exported ✓');
+}
+
+// ── Keyboard shortcuts ─────────────────────────────────────────────────────
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeReturnModal();
+  if (e.key === 'Enter' && document.activeElement.id === 'f-name') addItem();
+});
+
+// ── Init ───────────────────────────────────────────────────────────────────
+(async function init() {
+  await initApp();
+})();
+</script>
+</body>
+</html>
